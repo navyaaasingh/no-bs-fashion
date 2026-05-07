@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NO BULLSH*T FASHION</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6d64a;
+    --pink: #f46aa7;
+    --blue: #5dc5e2;
+    --orange: #f58f4b;
+    --mint: #c6f04f;
+    --paper: #fffdf7;
+    --ink: #0d0d0d;
+    --border: 4px solid var(--ink);
+    --shadow: 8px 8px 0 var(--ink);
+    --shadow-sm: 5px 5px 0 var(--ink);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Space Grotesk", sans-serif;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,0.28) 0 10%, transparent 10% 100%),
+      linear-gradient(135deg, #f6d64a 0%, #fff06b 32%, #5dc5e2 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  a, button { cursor: none; }
+
+  #cursor {
+    width: 18px;
+    height: 18px;
+    background: var(--ink);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: width 0.18s ease, height 0.18s ease, background 0.18s ease;
+  }
+  #cursor.hover {
+    width: 44px;
+    height: 44px;
+    background: var(--pink);
+  }
+  #cursor-ring {
+    width: 42px;
+    height: 42px;
+    border: 3px solid var(--ink);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 9998;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: left 0.08s ease, top 0.08s ease, width 0.18s ease, height 0.18s ease;
+  }
+
+  .page-shell {
+    width: min(1400px, calc(100% - 28px));
+    margin: 14px auto;
+    border: var(--border);
+    background: rgba(255, 253, 247, 0.8);
+    box-shadow: 10px 10px 0 var(--ink);
+    overflow: clip;
+    position: relative;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    border-bottom: var(--border);
+    background: var(--paper);
+    padding: 14px 22px;
+    gap: 20px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+  }
+  .topbar-left, .topbar-right {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .topbar-right { justify-content: flex-end; }
+  .masthead {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+  }
+
+  .hero {
+    position: relative;
+    padding: 32px 32px 24px;
+    min-height: 92vh;
+    display: grid;
+    grid-template-columns: 1.25fr 0.9fr;
+    gap: 24px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0)),
+      repeating-linear-gradient(90deg, rgba(13,13,13,0.06) 0 1px, transparent 1px 72px);
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 28px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    padding: 7px 16px;
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    background: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+  }
+
+  .hero-title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: clamp(5.4rem, 12vw, 11rem);
+    line-height: 0.82;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    max-width: 8ch;
+  }
+  .hero-title .line {
+    display: block;
+    transform: translateY(80px);
+    opacity: 0;
+    animation: riseIn 0.8s cubic-bezier(.25,1,.5,1) forwards;
+  }
+  .hero-title .line:nth-child(2) { animation-delay: 0.08s; }
+  .hero-title .line:nth-child(3) { animation-delay: 0.16s; }
+
+  .hero-sub {
+    max-width: 560px;
+    font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+    font-weight: 500;
+    line-height: 1.45;
+    margin-top: 18px;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 26px;
+  }
+  .magnetic {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 18px 30px;
+    border: var(--border);
+    box-shadow: var(--shadow);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, color 0.16s ease;
+  }
+  .magnetic.alt {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .magnetic:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0 var(--ink);
+    background: var(--pink);
+    color: var(--paper);
+  }
+
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    max-width: 720px;
+  }
+  .meta-card {
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    background: var(--paper);
+    padding: 16px;
+    min-height: 108px;
+    transition: transform 0.2s ease;
+  }
+  .meta-card:nth-child(1) { background: var(--paper); }
+  .meta-card:nth-child(2) { background: var(--mint); }
+  .meta-card:nth-child(3) { background: var(--orange); }
+  .meta-card:hover { transform: translate(-3px, -3px) rotate(-1deg); }
+  .meta-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .meta-value {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 40px;
+    line-height: 0.9;
+  }
+  .meta-copy {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 500;
+  }
+
+  .hero-art {
+    position: relative;
+    display: grid;
+    align-items: center;
+  }
+  .art-stage {
+    position: relative;
+    min-height: 620px;
+    border: var(--border);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0)),
+      linear-gradient(135deg, var(--pink) 0%, var(--orange) 55%, var(--bg) 100%);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .sticker, .float-card, .shape, .editorial-note {
+    position: absolute;
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shape.one {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--blue);
+    top: 26px;
+    right: 28px;
+    animation: bob 5s ease-in-out infinite;
+  }
+  .shape.two {
+    width: 110px;
+    height: 210px;
+    background: var(--mint);
+    bottom: 70px;
+    left: 30px;
+    transform: rotate(-12deg);
+    animation: bob 4.6s ease-in-out infinite reverse;
+  }
+  .shape.three {
+    width: 180px;
+    height: 90px;
+    background: var(--paper);
+    bottom: 24px;
+    right: 36px;
+    transform: rotate(10deg);
+  }
+
+  .figure-card {
+    position: absolute;
+    inset: 86px 88px 96px 80px;
+    border: var(--border);
+    background: rgba(255, 253, 247, 0.86);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .figure-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(13,13,13,0.08), transparent 22%),
+      repeating-linear-gradient(0deg, rgba(13,13,13,0.05) 0 1px, transparent 1px 56px);
+  }
+
+  .editorial-note {
+    background: var(--paper);
+    padding: 12px 14px;
+    max-width: 180px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+  .note-a { top: 26px; left: 24px; transform: rotate(-4deg); }
+  .note-b { right: 18px; bottom: 32px; transform: rotate(4deg); background: var(--mint); }
+
+  .figure-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .float-card {
+    background: var(--paper);
+    padding: 16px;
+    width: 180px;
+    animation: drift 6.2s ease-in-out infinite;
+  }
+  .float-card h3 {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .float-card p {
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .float-card.a { top: 48px; left: -18px; background: var(--bg); }
+  .float-card.b { top: 210px; right: -26px; background: var(--paper); animation-delay: -1.8s; }
+  .float-card.c { bottom: 44px; left: 14px; background: var(--blue); animation-delay: -2.4s; }
+
+  .sticker {
+    padding: 10px 14px;
+    background: var(--paper);
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 22px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transform: rotate(-10deg);
+  }
+  .sticker.one { top: 18px; right: 136px; background: var(--paper); }
+  .sticker.two { bottom: 110px; right: 10px; background: var(--mint); transform: rotate(12deg); }
+
+  .marquee-wrap {
+    border-top: var(--border);
+    border-bottom: var(--border);
+    background: var(--ink);
+    color: var(--bg);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .marquee {
+    display: inline-flex;
+    gap: 38px;
+    padding: 16px 0;
+    min-width: max-content;
+    animation: marquee 22s linear infinite;
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 34px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .section {
+    padding: 30px 32px 34px;
+    border-bottom: var(--border);
+    background: var(--paper);
+  }
+  .section-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .section-title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    line-height: 0.9;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .section-copy {
+    max-width: 560px;
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .stat-card {
+    border: var(--border);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease;
+  }
+  .stat-card:nth-child(1) { background: var(--blue); }
+  .stat-card:nth-child(2) { background: var(--pink); color: var(--paper); }
+  .stat-card:nth-child(3) { background: var(--mint); }
+  .stat-card:nth-child(4) { background: var(--orange); }
+  .stat-card:hover { transform: translate(-4px, -4px) rotate(-1deg); }
+  .stat-card .small {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .stat-card .big {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 64px;
+    line-height: 0.9;
+  }
+  .stat-card .body {
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+
+  .panel-stack {
+    display: grid;
+    gap: 16px;
+  }
+  .panel {
+    border: var(--border);
+    box-shadow: var(--shadow);
+    background: var(--paper);
+    padding: 20px;
+    transition: transform 0.2s ease;
+  }
+  .panel:hover { transform: translate(-4px, -4px); }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .pill {
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    background: var(--bg);
+  }
+  .panel-title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .list {
+    display: grid;
+    gap: 12px;
+  }
+  .list-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 0;
+    border-top: 3px solid var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .list-item:first-child { border-top: 0; padding-top: 0; }
+
+  .cover-grid {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 18px;
+    margin-top: 24px;
+  }
+  .cover-card {
+    border: var(--border);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    min-height: 240px;
+    position: relative;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .cover-card.primary { background: var(--ink); color: var(--paper); }
+  .cover-card.secondary { background: var(--pink); }
+  .cover-card.tertiary { background: var(--blue); }
+  .cover-card.quad { background: var(--mint); }
+  .cover-card h3 {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 38px;
+    line-height: 0.95;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    max-width: 8ch;
+  }
+  .cover-card p {
+    max-width: 26ch;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+  .cover-card .badge {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    border: var(--border);
+    background: var(--paper);
+    box-shadow: var(--shadow-sm);
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .footer-cta {
+    padding: 34px 32px 40px;
+    background: linear-gradient(135deg, var(--orange) 0%, var(--pink) 55%, var(--bg) 100%);
+    position: relative;
+  }
+  .footer-cta::before {
+    content: "";
+    position: absolute;
+    inset: 16px;
+    border: var(--border);
+    pointer-events: none;
+  }
+  .footer-inner {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+    align-items: end;
+  }
+  .footer-title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: clamp(3.4rem, 7vw, 7rem);
+    line-height: 0.86;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    max-width: 8ch;
+  }
+  .footer-copy {
+    margin-top: 14px;
+    max-width: 520px;
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .transition-screen {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    pointer-events: none;
+    z-index: 10000;
+  }
+  .transition-strip {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .transition-strip:nth-child(1) { background: var(--pink); }
+  .transition-strip:nth-child(2) { background: var(--blue); }
+  .transition-strip:nth-child(3) { background: var(--mint); }
+  .transition-strip:nth-child(4) { background: var(--ink); }
+  body.transitioning .transition-strip {
+    animation: wipeIn 0.68s cubic-bezier(.77,0,.18,1) forwards;
+  }
+  body.transitioning .transition-strip:nth-child(2) { animation-delay: 0.05s; }
+  body.transitioning .transition-strip:nth-child(3) { animation-delay: 0.1s; }
+  body.transitioning .transition-strip:nth-child(4) { animation-delay: 0.15s; }
+
+  @keyframes riseIn {
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-16px); }
+  }
+  @keyframes drift {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
+  }
+  @keyframes wipeIn {
+    to { transform: scaleX(1); }
+  }
+
+  @media (max-width: 1080px) {
+    body { cursor: auto; }
+    #cursor, #cursor-ring { display: none; }
+    .hero,
+    .section-grid,
+    .cover-grid,
+    .footer-inner { grid-template-columns: 1fr; }
+    .hero { min-height: auto; }
+    .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero-meta { grid-template-columns: 1fr; }
+    .art-stage { min-height: 540px; }
+  }
+
+  @media (max-width: 720px) {
+    .page-shell { width: min(100% - 16px, 1400px); margin: 8px auto; }
+    .topbar { grid-template-columns: 1fr; justify-items: start; }
+    .topbar-right { justify-content: flex-start; }
+    .hero,
+    .section,
+    .footer-cta { padding: 22px 18px; }
+    .hero-title { max-width: none; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .art-stage { min-height: 460px; }
+    .figure-card { inset: 74px 36px 74px 36px; }
+    .float-card { width: 150px; padding: 14px; }
+    .magnetic { width: 100%; }
+    .cta-row, .footer-actions { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div class="transition-screen" aria-hidden="true">
+  <div class="transition-strip"></div>
+  <div class="transition-strip"></div>
+  <div class="transition-strip"></div>
+  <div class="transition-strip"></div>
+</div>
+
+<main class="page-shell">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span>Issue 01</span>
+      <span>Fashion AI Cover Story</span>
+    </div>
+    <div class="masthead">NO BULLSH*T FASHION</div>
+    <div class="topbar-right">
+      <span>Experimental Style Engine</span>
+      <span>LOOKGEN Ready</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div>
+        <div class="eyebrow">AI styling without the fluff</div>
+        <h1 class="hero-title">
+          <span class="line">NO</span>
+          <span class="line">BULLSH*T</span>
+          <span class="line">FASHION</span>
+        </h1>
+        <p class="hero-sub">AI-powered styling without boring fashion advice. Experimental, fast, opinionated, and built for people who want better looks instead of beige moodboards.</p>
+        <div class="cta-row">
+          <button class="magnetic" data-enter>Enter</button>
+          <button class="magnetic alt" data-enter>Start Styling</button>
+        </div>
+      </div>
+
+      <div class="hero-meta reveal">
+        <article class="meta-card">
+          <div class="meta-label">Trend Velocity</div>
+          <div class="meta-value">94%</div>
+          <div class="meta-copy">Signal-heavy styling intelligence that moves faster than trend reports.</div>
+        </article>
+        <article class="meta-card">
+          <div class="meta-label">Fit Reads</div>
+          <div class="meta-value">2.4s</div>
+          <div class="meta-copy">From vibe choice to outfit direction in a blink.</div>
+        </article>
+        <article class="meta-card">
+          <div class="meta-label">Fashion Honesty</div>
+          <div class="meta-value">100</div>
+          <div class="meta-copy">No fake compliments. No stale advice. Just sharper style decisions.</div>
+        </article>
+      </div>
+    </div>
+
+    <div class="hero-art">
+      <div class="art-stage" id="artStage">
+        <div class="shape one"></div>
+        <div class="shape two"></div>
+        <div class="shape three"></div>
+
+        <div class="figure-card">
+          <svg class="figure-svg" viewBox="0 0 520 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="520" height="700" fill="transparent"/>
+            <ellipse cx="262" cy="118" rx="84" ry="92" fill="#1b1b1b"/>
+            <ellipse cx="262" cy="142" rx="66" ry="80" fill="#f1b9a1"/>
+            <path d="M199 155C206 92 320 92 325 156L323 206H201L199 155Z" fill="#111"/>
+            <rect x="235" y="209" width="54" height="48" fill="#f1b9a1"/>
+            <path d="M154 276L235 242H289L367 276L412 535H107L154 276Z" fill="#5DC5E2"/>
+            <path d="M174 309L233 274H290L349 309L335 511H187L174 309Z" fill="#0D0D0D"/>
+            <path d="M138 296L176 281L192 455L146 468L138 296Z" fill="#F46AA7"/>
+            <path d="M385 296L347 281L331 455L377 468L385 296Z" fill="#F46AA7"/>
+            <rect x="191" y="519" width="58" height="130" fill="#F58F4B"/>
+            <rect x="275" y="519" width="58" height="130" fill="#F58F4B"/>
+            <path d="M179 649H262V679H162L179 649Z" fill="#0D0D0D"/>
+            <path d="M258 649H341L358 679H258V649Z" fill="#0D0D0D"/>
+            <path d="M175 280H349V322H175V280Z" fill="#C6F04F"/>
+            <rect x="205" y="332" width="112" height="18" fill="#fffdf7"/>
+            <rect x="205" y="360" width="112" height="18" fill="#fffdf7"/>
+          </svg>
+        </div>
+
+        <div class="editorial-note note-a">Fashion-tech cover energy. Brutal honesty. Zero boring advice.</div>
+        <div class="editorial-note note-b">Hover. Scroll. Slam the CTA. Enter the dashboard.</div>
+
+        <div class="float-card a">
+          <h3>AI Roast</h3>
+          <p>Style feedback with opinions, not polite filler.</p>
+        </div>
+        <div class="float-card b">
+          <h3>Try-On</h3>
+          <p>Drag across the fit and watch the look switch in.</p>
+        </div>
+        <div class="float-card c">
+          <h3>Trend Intel</h3>
+          <p>Read the room before your outfit walks into it.</p>
+        </div>
+
+        <div class="sticker one">No Beige Energy</div>
+        <div class="sticker two">Lookgen Inside</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee-wrap">
+    <div class="marquee">
+      <span>NO BORING FASHION ADVICE</span>
+      <span>AI-POWERED STYLING</span>
+      <span>BRUTALIST TREND SIGNALS</span>
+      <span>TRY-ON PREVIEW</span>
+      <span>FIT ROASTS</span>
+      <span>LOOKGEN DASHBOARD</span>
+      <span>NO BORING FASHION ADVICE</span>
+      <span>AI-POWERED STYLING</span>
+      <span>BRUTALIST TREND SIGNALS</span>
+      <span>TRY-ON PREVIEW</span>
+      <span>FIT ROASTS</span>
+      <span>LOOKGEN DASHBOARD</span>
+    </div>
+  </div>
+
+  <section class="section reveal">
+    <div class="section-grid">
+      <div>
+        <div class="eyebrow">Magazine cover meets machine taste</div>
+        <h2 class="section-title">Front page energy for a fashion AI that actually has a point of view.</h2>
+        <p class="section-copy">This intro page is built like an editorial statement, not a product brochure. Big type, flat color blocks, stickers, layered motion, and enough attitude to feel like fashion media instead of another sterile app launch.</p>
+      </div>
+      <div class="panel-stack">
+        <article class="panel">
+          <div class="panel-head">
+            <div class="panel-title">What it does</div>
+            <div class="pill">Live handoff</div>
+          </div>
+          <div class="list">
+            <div class="list-item"><span>Animated hero</span><span>01</span></div>
+            <div class="list-item"><span>Brutalist cards</span><span>02</span></div>
+            <div class="list-item"><span>Trend ticker</span><span>03</span></div>
+            <div class="list-item"><span>Dashboard transition</span><span>04</span></div>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Why it hits</div>
+            <div class="pill" style="background:var(--blue);">Gen Z AI aesthetic</div>
+          </div>
+          <p class="section-copy" style="margin-top:0; max-width:none;">The layout behaves like a punchy fashion cover: asymmetrical composition, oversized masthead logic, and playful motion that still feels premium enough to introduce a real product.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <article class="stat-card reveal">
+        <div class="small">Trend Sync</div>
+        <div class="big">87</div>
+        <div class="body">Average trend relevance across generated looks, tuned for taste over hype.</div>
+      </article>
+      <article class="stat-card reveal">
+        <div class="small">Roast Accuracy</div>
+        <div class="big">9/10</div>
+        <div class="body">Feedback that actually sounds like a stylish friend who will tell the truth.</div>
+      </article>
+      <article class="stat-card reveal">
+        <div class="small">Fit Speed</div>
+        <div class="big">2.4S</div>
+        <div class="body">From mood to styled output without digging through endless options.</div>
+      </article>
+      <article class="stat-card reveal">
+        <div class="small">Moodboard Fatigue</div>
+        <div class="big">0%</div>
+        <div class="body">No sleepy grids. No fake luxury whispering. Just sharp directional styling.</div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="eyebrow">Cover lines</div>
+    <div class="cover-grid">
+      <article class="cover-card primary">
+        <span class="badge">Feature 01</span>
+        <h3>Start with chaos. End with a look that knows where it is going.</h3>
+        <p>Pair your dashboard’s AI generator with an intro page that sells attitude before utility.</p>
+      </article>
+      <article class="cover-card secondary">
+        <span class="badge">Feature 02</span>
+        <h3>Trend intelligence, roast mode, and virtual try-on in one style engine.</h3>
+        <p>The front page frames your project like a cultural object, not just another app.</p>
+      </article>
+      <article class="cover-card tertiary">
+        <span class="badge">Feature 03</span>
+        <h3>Playful motion. Hard edges. Bright signals.</h3>
+        <p>Cursor interactions, reveal timing, magnetic buttons, and layered cards keep it feeling alive.</p>
+      </article>
+      <article class="cover-card quad">
+        <span class="badge">Feature 04</span>
+        <h3>Enter and drop straight into LOOKGEN AI.</h3>
+        <p>Every CTA uses a full-screen color wipe, then opens your existing dashboard page.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="footer-cta reveal">
+    <div class="footer-inner">
+      <div>
+        <div class="eyebrow">Ready when you are</div>
+        <h2 class="footer-title">START STYLING WITHOUT THE BORING PART.</h2>
+        <p class="footer-copy">Click through and land directly inside your existing LOOKGEN AI dashboard. The front page is just the statement. The dashboard does the real work.</p>
+      </div>
+      <div class="footer-actions">
+        <button class="magnetic" data-enter>Start Styling</button>
+        <button class="magnetic alt" data-enter>Enter Dashboard</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const dashboardUrl = "ai-look-generator-enhanced.html";
+  const cursor = document.getElementById("cursor");
+  const ring = document.getElementById("cursor-ring");
+  const hoverTargets = "a, button, .meta-card, .stat-card, .panel, .cover-card, .float-card, .eyebrow";
+
+  window.addEventListener("mousemove", (event) => {
+    cursor.style.left = event.clientX + "px";
+    cursor.style.top = event.clientY + "px";
+    ring.style.left = event.clientX + "px";
+    ring.style.top = event.clientY + "px";
+  });
+
+  document.querySelectorAll(hoverTargets).forEach((element) => {
+    element.addEventListener("mouseenter", () => cursor.classList.add("hover"));
+    element.addEventListener("mouseleave", () => cursor.classList.remove("hover"));
+  });
+
+  document.querySelectorAll(".magnetic").forEach((button) => {
+    button.addEventListener("mousemove", (event) => {
+      const rect = button.getBoundingClientRect();
+      const x = event.clientX - rect.left - rect.width / 2;
+      const y = event.clientY - rect.top - rect.height / 2;
+      button.style.transform = `translate(${x * 0.09}px, ${y * 0.09}px)`;
+    });
+    button.addEventListener("mouseleave", () => {
+      button.style.transform = "";
+    });
+  });
+
+  const artStage = document.getElementById("artStage");
+  artStage.addEventListener("mousemove", (event) => {
+    const rect = artStage.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+    artStage.querySelectorAll(".float-card, .sticker, .editorial-note").forEach((item, index) => {
+      const depth = (index + 1) * 6;
+      item.style.transform = `translate(${x * depth}px, ${y * depth}px) rotate(${index % 2 === 0 ? -4 : 4}deg)`;
+    });
+  });
+  artStage.addEventListener("mouseleave", () => {
+    artStage.querySelectorAll(".float-card, .sticker, .editorial-note").forEach((item) => {
+      item.style.transform = "";
+    });
+  });
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) entry.target.classList.add("visible");
+    });
+  }, { threshold: 0.14 });
+
+  document.querySelectorAll(".reveal").forEach((node) => revealObserver.observe(node));
+
+  function enterDashboard() {
+    document.body.classList.add("transitioning");
+    setTimeout(() => {
+      window.location.href = dashboardUrl;
+    }, 760);
+  }
+
+  document.querySelectorAll("[data-enter]").forEach((button) => {
+    button.addEventListener("click", enterDashboard);
+  });
+</script>
+</body>
+</html>

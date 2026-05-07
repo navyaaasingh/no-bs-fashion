@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOOKGEN AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  /* ─── TOKENS ─── */
+  :root {
+    --yellow:  #F5C842;
+    --pink:    #F06BAA;
+    --blue:    #5BC4E0;
+    --orange:  #F2894A;
+    --white:   #FFFFFF;
+    --black:   #0D0D0D;
+    --border:  3px solid #0D0D0D;
+    --border4: 4px solid #0D0D0D;
+    --shadow:  4px 4px 0 #0D0D0D;
+    --shadow6: 6px 6px 0 #0D0D0D;
+    --radius:  0px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; height: 100%; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--yellow);
+    color: var(--black);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    cursor: none;
+  }
+
+  /* ─── CUSTOM CURSOR ─── */
+  #cursor {
+    width: 16px; height: 16px;
+    background: var(--black);
+    border: none;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: width 0.2s, height 0.2s, background 0.2s, border-radius 0.2s;
+    mix-blend-mode: multiply;
+  }
+  #cursor.hover {
+    width: 40px; height: 40px;
+    background: var(--pink);
+    border-radius: 0;
+  }
+  #cursor.active-click {
+    width: 10px; height: 10px;
+    background: var(--yellow);
+  }
+  #cursor-trail {
+    width: 8px; height: 8px;
+    border: 2px solid var(--black);
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: left 0.08s ease, top 0.08s ease;
+  }
+
+  /* ─── TOP NAV ─── */
+  nav {
+    background: var(--black);
+    border-bottom: var(--border4);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    transition: transform 0.3s ease;
+  }
+  nav.hidden { transform: translateY(-100%); }
+  .nav-links { display: flex; gap: 0; margin-right: auto; }
+  .nav-links a {
+    color: var(--white);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    border-right: 2px solid #333;
+    transition: background 0.15s, color 0.15s;
+    text-transform: uppercase;
+    cursor: none;
+  }
+  .nav-links a:hover { background: var(--yellow); color: var(--black); }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--yellow);
+    letter-spacing: 3px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: letter-spacing 0.3s;
+  }
+  nav:hover .nav-logo { letter-spacing: 5px; }
+  .nav-icons { display: flex; gap: 0; margin-left: auto; }
+  .nav-icon {
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--white); font-size: 18px;
+    border-left: 2px solid #333;
+    cursor: none;
+    transition: background 0.15s, transform 0.15s;
+    background: none; border-top: none; border-right: none; border-bottom: none;
+    border-left: 2px solid #333;
+  }
+  .nav-icon:hover { background: var(--yellow); color: var(--black); }
+
+  /* ─── CATEGORY TAB BAR ─── */
+  .tab-bar {
+    display: flex;
+    border-bottom: var(--border4);
+    background: var(--white);
+    overflow: hidden;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: none;
+    border: none;
+    border-right: 3px solid var(--black);
+    background: var(--white);
+    transition: background 0.15s, transform 0.1s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 0;
+    background: var(--pink);
+    transition: height 0.2s;
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: var(--yellow); }
+  .tab:hover::after { height: 4px; }
+  .tab.active { background: var(--pink); color: var(--white); }
+  .tab.active::after { display: none; }
+
+  /* ─── MAIN LAYOUT ─── */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    flex: 1;
+    border-top: var(--border4);
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    background: var(--blue);
+    border-right: var(--border4);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    padding: 20px 20px 12px;
+    border-bottom: var(--border);
+    background: var(--blue);
+  }
+  .sidebar-section { padding: 16px 20px 8px; border-bottom: var(--border); }
+  .sidebar-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    color: rgba(0,0,0,0.55);
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    cursor: none;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    border: var(--border);
+    background: var(--white);
+    box-shadow: var(--shadow);
+    transition: all 0.15s;
+    width: 100%;
+    text-align: left;
+  }
+  .sidebar-item:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--yellow); }
+  .sidebar-item.active { background: var(--pink); color: var(--white); }
+  .sidebar-item .check {
+    width: 18px; height: 18px;
+    border: 2px solid var(--black);
+    background: var(--white);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .sidebar-item.active .check { background: var(--black); color: var(--white); }
+  .sidebar-arrow { font-size: 16px; }
+  .sidebar-category {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px;
+    cursor: none;
+    font-size: 14px;
+    font-weight: 700;
+    border-bottom: var(--border);
+    transition: background 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .sidebar-category:hover { background: rgba(0,0,0,0.08); }
+  .sidebar-category.active { background: var(--black); color: var(--white); }
+
+  /* ─── MAIN CONTENT ─── */
+  .main-content { background: var(--white); overflow-y: auto; }
+
+  /* ─── PRODUCT GRID ─── */
+  .product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: flex-start;
+  }
+  .product-card {
+    width: calc(100% / 3);
+    border-right: var(--border);
+    border-bottom: var(--border);
+    cursor: none;
+    transition: background 0.15s, transform 0.15s;
+    position: relative;
+    background: var(--white);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .product-card:hover { background: #FFFDE8; transform: scale(1.01); z-index: 2; }
+  .product-card:nth-child(3n) { border-right: none; }
+  .product-card:first-child:nth-last-child(1) { border-right: none; }
+  .product-card:first-child:nth-last-child(2) ~ .product-card { border-right: none; }
+
+  .card-img-placeholder {
+    width: 100%; height: 180px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    border-bottom: var(--border);
+    transition: font-size 0.2s;
+  }
+  .product-card:hover .card-img-placeholder { font-size: 60px; }
+  .card-price-tag {
+    position: absolute;
+    top: 10px; left: 10px;
+    background: var(--pink);
+    color: var(--white);
+    border: 2px solid var(--black);
+    box-shadow: 2px 2px 0 var(--black);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 3px 10px;
+    letter-spacing: 0.5px;
+  }
+  .card-special-tag {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--yellow);
+    color: var(--black);
+    border: 2px solid var(--black);
+    box-shadow: 2px 2px 0 var(--black);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    letter-spacing: 0.5px;
+  }
+  .card-body { padding: 12px 14px; }
+  .card-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .card-sub  { font-size: 11px; color: #666; font-weight: 500; }
+  .card-footer {
+    display: flex; align-items: center;
+    border-top: var(--border); background: var(--black);
+  }
+  .card-footer-price {
+    padding: 8px 14px; font-size: 12px; font-weight: 800;
+    color: var(--white); border-right: 2px solid #333;
+  }
+  .card-buy-btn {
+    flex: 1; padding: 8px 14px; font-size: 11px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--yellow); background: none; border: none;
+    cursor: none; text-align: center; transition: background 0.15s;
+  }
+  .card-buy-btn:hover { background: #222; }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 300;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border: var(--border4); box-shadow: var(--shadow6);
+    width: 820px; max-width: 95vw;
+    display: grid; grid-template-columns: 340px 1fr;
+    position: relative; animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { from { transform: scale(0.88) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .modal-img {
+    height: 420px; object-fit: cover;
+    border-right: var(--border4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px; background: #f5f0e8;
+    transition: font-size 0.2s;
+  }
+  .modal-img:hover { font-size: 100px; }
+  .modal-body { background: var(--orange); padding: 0; display: flex; flex-direction: column; }
+  .modal-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; background: var(--white);
+    border: var(--border); box-shadow: var(--shadow);
+    cursor: none; font-size: 18px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { transform: translate(-2px,-2px) rotate(90deg); box-shadow: 6px 6px 0 var(--black); background: var(--yellow); }
+  .modal-info { padding: 32px 28px 20px; flex: 1; }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 42px;
+    letter-spacing: 1px; line-height: 1; margin-bottom: 14px; color: var(--black);
+  }
+  .modal-desc { font-size: 13px; line-height: 1.65; color: rgba(0,0,0,0.75); font-weight: 500; margin-bottom: 24px; }
+  .modal-qty-section { padding: 0 28px 24px; }
+  .qty-row {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 14px; padding-bottom: 14px;
+    border-bottom: 2px solid rgba(0,0,0,0.15);
+  }
+  .qty-label { font-size: 13px; font-weight: 700; width: 90px; flex-shrink: 0; }
+  .qty-controls {
+    display: flex; align-items: center; gap: 0;
+    border: var(--border); box-shadow: var(--shadow); background: var(--white);
+  }
+  .qty-btn {
+    width: 32px; height: 32px; background: none; border: none;
+    cursor: none; font-size: 16px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center; transition: background 0.1s;
+  }
+  .qty-btn:hover { background: var(--yellow); }
+  .qty-btn.minus { background: var(--blue); }
+  .qty-btn.plus  { background: var(--pink); color: var(--white); }
+  .qty-num {
+    width: 40px; text-align: center; font-size: 15px; font-weight: 800;
+    border-left: 2px solid var(--black); border-right: 2px solid var(--black);
+    height: 32px; line-height: 32px; background: var(--white);
+  }
+  .modal-add-btn {
+    margin: 0 28px 28px; padding: 16px; background: var(--white);
+    border: var(--border4); box-shadow: var(--shadow6);
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+    letter-spacing: 3px; cursor: none;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    transition: all 0.15s; width: calc(100% - 56px);
+  }
+  .modal-add-btn:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--black); background: var(--yellow); }
+
+  /* ─── GENERATE SECTION ─── */
+  .generate-section {
+    background: var(--yellow);
+    border-top: var(--border4);
+    padding: 32px 40px;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+  }
+  .gen-left { flex: 1; }
+  .gen-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+  }
+  .gen-heading::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 4px;
+    background: var(--black);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .gen-left:hover .gen-heading::after { transform: scaleX(1); }
+
+  .gen-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px; display: block;
+    color: rgba(0,0,0,0.55);
+  }
+  .chip {
+    padding: 7px 16px; border: var(--border);
+    background: var(--white); font-size: 12px; font-weight: 700;
+    cursor: none; box-shadow: var(--shadow); transition: all 0.15s;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .chip:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--yellow); }
+  .chip.active { background: var(--black); color: var(--yellow); transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
+  .chip.active-v { background: var(--pink); color: var(--white); border-color: var(--pink); transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); }
+
+  .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .swatch {
+    width: 32px; height: 32px; border: var(--border); cursor: none;
+    box-shadow: 2px 2px 0 var(--black); transition: all 0.15s; position: relative;
+  }
+  .swatch:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--black); }
+  .swatch.active { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--black); border-width: 3px; }
+  .swatch.active::after {
+    content: '✓'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  }
+
+  .gen-btn {
+    padding: 16px 40px; background: var(--black); color: var(--yellow);
+    border: var(--border4); box-shadow: var(--shadow6);
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px;
+    cursor: none; transition: all 0.15s; margin-top: 8px;
+    position: relative; overflow: hidden;
+  }
+  .gen-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--pink);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .gen-btn:hover::before { transform: translateX(0); }
+  .gen-btn:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--black); }
+  .gen-btn span { position: relative; z-index: 1; }
+  .gen-btn.loading { pointer-events: none; opacity: 0.7; }
+  .gen-btn .btn-text { transition: opacity 0.2s; }
+  .gen-btn .btn-loader { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; z-index: 2; }
+  .gen-btn.loading .btn-text { opacity: 0; }
+  .gen-btn.loading .btn-loader { opacity: 1; }
+  .spinner { width: 22px; height: 22px; border: 3px solid rgba(245,200,66,0.3); border-top-color: var(--yellow); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .gen-right { width: 380px; flex-shrink: 0; }
+
+  /* ─── OUTFIT RESULT ─── */
+  .outfit-result {
+    border: var(--border4); box-shadow: var(--shadow6);
+    background: var(--white); overflow: hidden;
+    transition: box-shadow 0.2s;
+    animation: none;
+  }
+  .outfit-result:hover { box-shadow: 10px 10px 0 var(--black); }
+  .outfit-result-header {
+    background: var(--pink); border-bottom: var(--border);
+    padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .outfit-result-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 1.5px; color: var(--white);
+  }
+  .outfit-score-badge {
+    background: var(--yellow); color: var(--black);
+    border: 2px solid var(--black); font-size: 13px; font-weight: 800;
+    padding: 3px 12px; box-shadow: 2px 2px 0 var(--black);
+  }
+
+  .outfit-avatar-row { display: flex; gap: 0; border-bottom: var(--border); }
+  .avatar-box {
+    width: 140px; flex-shrink: 0; background: var(--blue);
+    border-right: var(--border);
+    display: flex; align-items: center; justify-content: center; min-height: 220px;
+    position: relative; overflow: hidden;
+  }
+  .avatar-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, transparent 0, transparent 8px, rgba(255,255,255,0.07) 8px, rgba(255,255,255,0.07) 10px);
+  }
+  .avatar-box svg { width: 120px; height: 200px; position: relative; z-index: 1; }
+
+  .outfit-pieces-list { flex: 1; padding: 12px; }
+  .piece-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; margin-bottom: 6px;
+    border: var(--border); background: var(--white);
+    box-shadow: 2px 2px 0 var(--black); transition: all 0.15s;
+    font-size: 12px; animation: slideInRight 0.3s ease both;
+  }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+  .piece-row:nth-child(2) { animation-delay: 0.05s; }
+  .piece-row:nth-child(3) { animation-delay: 0.1s; }
+  .piece-row:nth-child(4) { animation-delay: 0.15s; }
+  .piece-row:hover { background: var(--yellow); transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--black); }
+  .piece-emoji { font-size: 18px; flex-shrink: 0; }
+  .piece-info { flex: 1; }
+  .piece-name { font-weight: 700; font-size: 12px; }
+  .piece-detail { font-size: 10px; color: #777; }
+  .piece-tag {
+    background: var(--pink); color: var(--white);
+    font-size: 9px; font-weight: 800; letter-spacing: 0.5px;
+    padding: 2px 7px; border: 2px solid var(--black);
+    text-transform: uppercase; flex-shrink: 0;
+  }
+
+  .outfit-placeholder {
+    min-height: 220px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    background: var(--white); color: #aaa;
+    border-bottom: var(--border); padding: 24px;
+  }
+  .outfit-placeholder-icon {
+    font-size: 36px; width: 64px; height: 64px;
+    border: var(--border4); background: #f5f5f5;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow);
+    animation: pulseIcon 2s ease infinite;
+  }
+  @keyframes pulseIcon { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+  .outfit-placeholder p { font-size: 13px; font-weight: 600; color: #bbb; text-align: center; }
+
+  .outfit-score-bar {
+    padding: 12px 16px; background: var(--black);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .score-ring { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
+  .score-ring svg { transform: rotate(-90deg); }
+  #scoreArc { transition: stroke-dashoffset 1s cubic-bezier(0.34,1.56,0.64,1); }
+  .score-ring-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: var(--yellow);
+    font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;
+  }
+  .score-text { flex: 1; }
+  .score-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; color: var(--white); }
+  .score-sub { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
+
+  /* ─── NEW: AI TRY-ON SECTION ─── */
+  .tryon-section {
+    border-top: var(--border4);
+    background: var(--black);
+    padding: 40px;
+  }
+  .tryon-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: var(--border4);
+    border-color: var(--yellow);
+    box-shadow: 8px 8px 0 var(--yellow);
+    overflow: hidden;
+  }
+  .tryon-left {
+    background: var(--white);
+    border-right: var(--border4);
+    border-color: var(--yellow);
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .tryon-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: var(--black);
+    border: var(--border); box-shadow: var(--shadow);
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; padding: 5px 14px;
+    width: fit-content; margin-bottom: 4px;
+  }
+  .tryon-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px; letter-spacing: 2px; line-height: 1;
+    color: var(--black);
+  }
+  .tryon-desc {
+    font-size: 13px; font-weight: 500;
+    color: rgba(0,0,0,0.6); line-height: 1.65;
+  }
+
+  .upload-dropzone {
+    border: 3px dashed var(--black);
+    background: #f9f7f0;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: none;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-dropzone::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--yellow);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.2s;
+    z-index: 0;
+  }
+  .upload-dropzone:hover::before { transform: scaleY(1); }
+  .upload-dropzone.drag-over { border-style: solid; background: var(--yellow); }
+  .upload-dropzone > * { position: relative; z-index: 1; }
+  .upload-icon-big { font-size: 48px; margin-bottom: 10px; display: block; }
+  .upload-main-text { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .upload-sub-text { font-size: 11px; color: #777; font-weight: 500; }
+  .upload-btn-inline {
+    display: inline-block; margin-top: 16px;
+    padding: 10px 24px; background: var(--black);
+    color: var(--yellow); border: var(--border);
+    box-shadow: var(--shadow); font-size: 12px; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase; cursor: none;
+    transition: all 0.15s;
+  }
+  .upload-btn-inline:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--black); background: var(--pink); }
+
+  .tryon-right {
+    background: #111;
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .tryon-right-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 2px; color: var(--yellow);
+    opacity: 0.6;
+  }
+  .tryon-preview-area {
+    flex: 1;
+    border: var(--border4);
+    border-color: rgba(245,200,66,0.3);
+    min-height: 320px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    background: #1a1a1a;
+  }
+  .tryon-placeholder-text {
+    text-align: center; color: rgba(255,255,255,0.2);
+    font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    letter-spacing: 3px; line-height: 1.3;
+  }
+
+  /* Before / After slider state */
+  .tryon-preview-area.has-preview { cursor: none; }
+  .before-after-wrap {
+    position: absolute; inset: 0;
+    display: none;
+  }
+  .before-after-wrap.active { display: block; }
+  .before-panel, .after-panel {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .before-panel { background: #2a2a2a; }
+  .after-panel {
+    background: #111;
+    clip-path: inset(0 50% 0 0);
+    transition: clip-path 0.02s;
+  }
+  .before-label, .after-label {
+    position: absolute; bottom: 12px;
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; padding: 4px 10px;
+    border: 2px solid var(--black);
+  }
+  .before-label { left: 12px; background: var(--white); color: var(--black); }
+  .after-label { right: 12px; background: var(--yellow); color: var(--black); }
+  .before-avatar-display, .after-avatar-display {
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+    position: relative; overflow: hidden;
+  }
+  .before-avatar-display svg, .after-avatar-display svg {
+    width: 130px; height: 230px; position: relative; z-index: 2;
+    filter: drop-shadow(0 10px 24px rgba(0,0,0,0.28));
+  }
+  .before-avatar-display { filter: grayscale(100%) brightness(0.6); }
+  .tryon-photo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .tryon-photo.visible { opacity: 1; }
+  .before-avatar-display.has-image,
+  .after-avatar-display.has-image { filter: none; }
+  .before-avatar-display.has-image svg,
+  .after-avatar-display.has-image svg { opacity: 0; }
+  .before-avatar-display.has-image .tryon-photo {
+    opacity: 0.92; filter: grayscale(15%) contrast(1.05);
+  }
+  .after-avatar-display.has-image .tryon-photo {
+    opacity: 0.86; transform: scale(1.02);
+    filter: saturate(1.15) contrast(1.04) brightness(0.9);
+  }
+  .tryon-look-wash {
+    position: absolute; inset: 0;
+    opacity: 0;
+    mix-blend-mode: screen;
+    transition: opacity 0.25s ease;
+    z-index: 1;
+  }
+  .after-avatar-display.has-image .tryon-look-wash { opacity: 0.75; }
+  .tryon-look-overlay {
+    position: absolute; left: 16px; right: 16px; bottom: 18px;
+    background: rgba(13,13,13,0.84);
+    border: 2px solid var(--yellow);
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.45);
+    padding: 12px;
+    z-index: 3;
+    display: flex; flex-direction: column; gap: 10px;
+    backdrop-filter: blur(6px);
+  }
+  .tryon-look-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: 1.8px;
+    text-transform: uppercase; color: var(--yellow);
+  }
+  .tryon-look-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 1.2px; color: var(--white); line-height: 1;
+  }
+  .tryon-look-meta {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .tryon-look-meta span {
+    border: 2px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    padding: 4px 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .upload-selected-text {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: rgba(0,0,0,0.55);
+  }
+
+  .slider-line {
+    position: absolute; top: 0; bottom: 0;
+    width: 4px; background: var(--yellow);
+    left: 50%; transform: translateX(-50%);
+    cursor: none; z-index: 10;
+    display: none;
+  }
+  .slider-line.active { display: block; }
+  .slider-handle {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 36px; height: 36px;
+    background: var(--yellow); border: var(--border);
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; white-space: nowrap;
+  }
+
+  .tryon-scan-btn {
+    padding: 14px 28px; background: var(--yellow);
+    border: var(--border4); box-shadow: var(--shadow6);
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    letter-spacing: 2px; cursor: none; transition: all 0.15s;
+    color: var(--black); text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .tryon-scan-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--pink);
+    transform: translateX(-100%); transition: transform 0.25s;
+  }
+  .tryon-scan-btn:hover::before { transform: translateX(0); }
+  .tryon-scan-btn span { position: relative; z-index: 1; }
+  .tryon-scan-btn:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--black); color: var(--white); }
+
+  /* Scanning animation */
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 3px;
+    background: var(--yellow); opacity: 0;
+    top: 0;
+    box-shadow: 0 0 12px 4px rgba(245,200,66,0.6);
+  }
+  .scanning .scan-line {
+    opacity: 1;
+    animation: scanMove 1.4s ease-in-out infinite;
+  }
+  @keyframes scanMove { 0%{top:0;} 50%{top:calc(100% - 3px);} 100%{top:0;} }
+
+  /* ─── NEW: FASHION ROAST SECTION ─── */
+  .roast-section {
+    border-top: var(--border4);
+    background: var(--orange);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .roast-section::before {
+    content: 'ROAST';
+    position: absolute; right: -20px; top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    font-family: 'Bebas Neue', sans-serif; font-size: 160px;
+    color: rgba(0,0,0,0.06); letter-spacing: 10px;
+    pointer-events: none; line-height: 1;
+  }
+  .roast-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .roast-left-header {
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .roast-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--black); color: var(--yellow);
+    border: var(--border); box-shadow: var(--shadow);
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; padding: 5px 14px; width: fit-content;
+  }
+  .roast-fire { animation: flicker 0.8s ease infinite alternate; display: inline-block; }
+  @keyframes flicker { from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.1) rotate(3deg);} }
+
+  .roast-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px; letter-spacing: 2px; line-height: 0.95;
+    color: var(--black);
+  }
+  .roast-subtext {
+    font-size: 13px; font-weight: 500;
+    color: rgba(0,0,0,0.65); line-height: 1.65; max-width: 340px;
+  }
+
+  .roast-upload-zone {
+    border: var(--border4);
+    background: var(--white);
+    padding: 28px 24px;
+    text-align: center;
+    cursor: none;
+    box-shadow: var(--shadow6);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-top: 8px;
+  }
+  .roast-upload-zone:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--black); }
+  .roast-upload-icon { font-size: 40px; margin-bottom: 8px; }
+  .roast-upload-text { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .roast-upload-sub { font-size: 11px; color: #888; font-weight: 500; }
+  .roast-upload-meta {
+    margin-top: 14px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: rgba(0,0,0,0.55);
+  }
+
+  .roast-trigger-btn {
+    margin-top: 16px; width: 100%;
+    padding: 14px; background: var(--black); color: var(--yellow);
+    border: var(--border4); box-shadow: var(--shadow6);
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    letter-spacing: 2px; cursor: none; transition: all 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .roast-trigger-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--pink);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s;
+  }
+  .roast-trigger-btn span { position: relative; z-index: 1; }
+  .roast-trigger-btn:hover::before { transform: scaleX(1); }
+  .roast-trigger-btn:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--black); }
+
+  .roast-right { display: flex; flex-direction: column; gap: 16px; }
+
+  .roast-result-card {
+    border: var(--border4);
+    background: var(--white);
+    box-shadow: var(--shadow6);
+    overflow: hidden;
+    display: none;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .roast-result-card.show { display: block; }
+  .roast-result-header {
+    background: var(--black); padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .roast-result-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px; color: var(--yellow);
+    letter-spacing: 2px; line-height: 1;
+  }
+  .roast-result-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+  }
+
+  .roast-verdict {
+    padding: 20px;
+    border-bottom: var(--border);
+    position: relative;
+  }
+  .roast-quote-mark {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px; line-height: 0.7;
+    color: var(--yellow); opacity: 0.3;
+    position: absolute; top: 14px; left: 14px;
+    pointer-events: none;
+  }
+  .roast-verdict-text {
+    font-size: 14px; font-weight: 600;
+    line-height: 1.65; color: var(--black);
+    padding-left: 24px;
+    min-height: 60px;
+  }
+  .roast-verdict-text .typed-cursor { animation: blink-cursor 0.8s step-end infinite; }
+  @keyframes blink-cursor { 0%,100%{opacity:1;} 50%{opacity:0;} }
+  .roast-photo-row {
+    display: none;
+    grid-template-columns: 96px 1fr;
+    gap: 14px;
+    padding: 18px 20px;
+    border-bottom: var(--border);
+    background: #fff7ef;
+  }
+  .roast-photo-row.show { display: grid; }
+  .roast-photo-thumb {
+    border: var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    background: #ddd;
+  }
+  .roast-photo-thumb img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .roast-photo-meta {
+    display: flex; flex-direction: column; justify-content: center; gap: 6px;
+  }
+  .roast-photo-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(0,0,0,0.5);
+  }
+  .roast-photo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 1px; color: var(--black); line-height: 1;
+  }
+  .roast-photo-sub {
+    font-size: 12px; font-weight: 600; color: rgba(0,0,0,0.62);
+  }
+
+  .roast-tags-row {
+    padding: 14px 20px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    border-bottom: var(--border);
+  }
+  .roast-tag-pill {
+    padding: 5px 12px; border: var(--border);
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase;
+    transition: all 0.15s; cursor: none;
+  }
+  .roast-tag-pill:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--black); }
+  .roast-tag-pill.good { background: #C8F135; }
+  .roast-tag-pill.bad { background: var(--pink); color: var(--white); }
+  .roast-tag-pill.neutral { background: var(--blue); }
+
+  .roast-meter-row {
+    padding: 14px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .roast-meter-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .roast-meter-bar {
+    height: 12px; background: #eee; border: 2px solid var(--black);
+    overflow: hidden;
+  }
+  .roast-meter-fill {
+    height: 100%;
+    transition: width 1.2s cubic-bezier(0.34,1.56,0.64,1);
+    width: 0;
+  }
+
+  .roast-idle {
+    border: var(--border4);
+    background: var(--white);
+    box-shadow: var(--shadow6);
+    padding: 32px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 12px;
+    text-align: center;
+  }
+  .roast-idle-icon {
+    font-size: 48px;
+    animation: wobble 3s ease infinite;
+  }
+  @keyframes wobble { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-8deg);} 75%{transform:rotate(8deg);} }
+  .roast-idle h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 1.5px;
+  }
+  .roast-idle p { font-size: 12px; font-weight: 500; color: #777; line-height: 1.5; max-width: 240px; }
+
+  /* ─── TREND INTELLIGENCE ─── */
+  .trend-section {
+    border-top: var(--border4);
+    background: linear-gradient(135deg, #fff7e1 0%, #fff 55%, #eef9ff 100%);
+    padding: 40px;
+  }
+  .trend-inner { max-width: 1100px; margin: 0 auto; }
+  .trend-header {
+    display: flex; justify-content: space-between; align-items: end;
+    gap: 20px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .trend-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--black); color: var(--yellow);
+    border: var(--border); box-shadow: var(--shadow);
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; padding: 5px 14px;
+    width: fit-content; margin-bottom: 12px;
+  }
+  .trend-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px; letter-spacing: 2px; line-height: 0.95; color: var(--black);
+  }
+  .trend-subtext {
+    max-width: 360px;
+    font-size: 13px; font-weight: 500; color: rgba(0,0,0,0.66); line-height: 1.65;
+  }
+  .trend-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr 1fr;
+    gap: 18px;
+  }
+  .trend-card {
+    border: var(--border4);
+    background: var(--white);
+    box-shadow: var(--shadow6);
+    padding: 22px;
+    min-height: 220px;
+  }
+  .trend-card-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(0,0,0,0.45); margin-bottom: 10px;
+  }
+  .trend-score-card {
+    background: var(--black); color: var(--white);
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .trend-score-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 78px; letter-spacing: 2px; line-height: 0.9; color: var(--yellow);
+  }
+  .trend-score-caption {
+    font-size: 12px; font-weight: 600; line-height: 1.6; color: rgba(255,255,255,0.76);
+  }
+  .trend-bars {
+    display: flex; flex-direction: column; gap: 12px; margin-top: 16px;
+  }
+  .trend-bar-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 4px; color: var(--white);
+  }
+  .trend-bar-track {
+    height: 10px; border: 2px solid var(--white); background: rgba(255,255,255,0.08);
+  }
+  .trend-bar-fill {
+    height: 100%; width: 0; transition: width 0.8s ease;
+  }
+  .trend-chip-grid {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .trend-chip {
+    border: var(--border);
+    box-shadow: var(--shadow);
+    background: var(--yellow);
+    padding: 10px 12px;
+    font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .trend-insight-list {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .trend-insight-item {
+    border: var(--border);
+    background: #f8f8f8;
+    box-shadow: var(--shadow);
+    padding: 12px 14px;
+  }
+  .trend-insight-title {
+    font-size: 10px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(0,0,0,0.45); margin-bottom: 6px;
+  }
+  .trend-insight-copy {
+    font-size: 13px; font-weight: 600; line-height: 1.55; color: var(--black);
+  }
+
+  /* ─── COMBINATIONS ─── */
+  .combinations-section {
+    border-top: var(--border4);
+    background: var(--black);
+    padding: 36px 40px;
+  }
+  .section-header { margin-bottom: 24px; }
+  .section-tag {
+    display: inline-block;
+    background: var(--pink); color: var(--white);
+    border: 2px solid var(--white);
+    font-size: 10px; font-weight: 800; letter-spacing: 3px;
+    padding: 4px 12px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px; letter-spacing: 2px; color: var(--yellow); line-height: 1;
+  }
+  .combinations-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+
+  .combo-card {
+    background: var(--white); border: var(--border4);
+    box-shadow: var(--shadow6); cursor: none;
+    transition: all 0.2s; overflow: hidden;
+  }
+  .combo-card:hover { transform: translate(-5px,-5px); box-shadow: 11px 11px 0 var(--yellow); }
+  .combo-card.selected { border-color: var(--pink); box-shadow: 6px 6px 0 var(--pink); }
+  .combo-avatar {
+    height: 180px; background: var(--blue);
+    border-bottom: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .combo-avatar svg { width: 90px; height: 170px; transition: transform 0.2s; }
+  .combo-card:hover .combo-avatar svg { transform: scale(1.05); }
+  .combo-var-tag {
+    position: absolute; bottom: 8px; left: 8px;
+    background: var(--pink); color: var(--white);
+    border: 2px solid var(--black);
+    font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    padding: 2px 10px; text-transform: uppercase;
+  }
+  .combo-info { padding: 14px; }
+  .combo-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 4px; }
+  .combo-desc { font-size: 11px; color: #666; font-weight: 500; margin-bottom: 12px; line-height: 1.5; }
+  .combo-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .combo-tag {
+    background: var(--black); color: var(--yellow);
+    font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+    padding: 3px 8px; border: 2px solid var(--black);
+    text-transform: uppercase; transition: all 0.12s;
+  }
+  .combo-card:hover .combo-tag { background: var(--yellow); color: var(--black); }
+  .combo-card.selected .combo-tag { background: var(--pink); }
+
+  /* ─── ACCESSORIES ─── */
+  .accessories-section {
+    border-top: var(--border4); background: var(--white); padding: 36px 40px;
+  }
+  .accessories-section .section-tag { border-color: var(--black); color: var(--black); background: var(--yellow); }
+  .accessories-section .section-title { color: var(--black); }
+  .acc-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  .acc-card {
+    border: var(--border4); background: var(--white);
+    transition: all 0.2s; overflow: hidden; position: relative;
+  }
+  .acc-card:nth-child(4n+1) { box-shadow: 4px 4px 0 var(--black); }
+  .acc-card:nth-child(4n+2) { box-shadow: 4px 4px 0 var(--pink); border-color: var(--pink); }
+  .acc-card:nth-child(4n+3) { box-shadow: 4px 4px 0 var(--blue); border-color: var(--blue); }
+  .acc-card:nth-child(4n+4) { box-shadow: 4px 4px 0 var(--orange); border-color: var(--orange); }
+  .acc-card:hover { transform: translate(-3px,-3px); }
+  .acc-card:nth-child(4n+1):hover { box-shadow: 7px 7px 0 var(--black); }
+  .acc-card:nth-child(4n+2):hover { box-shadow: 7px 7px 0 var(--pink); }
+  .acc-card:nth-child(4n+3):hover { box-shadow: 7px 7px 0 var(--blue); }
+  .acc-card:nth-child(4n+4):hover { box-shadow: 7px 7px 0 var(--orange); }
+  .acc-top {
+    height: 80px; border-bottom: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; transition: font-size 0.2s, transform 0.2s;
+  }
+  .acc-card:hover .acc-top { font-size: 44px; }
+  .acc-card:nth-child(4n+1) .acc-top { background: var(--black); }
+  .acc-card:nth-child(4n+2) .acc-top { background: var(--pink); }
+  .acc-card:nth-child(4n+3) .acc-top { background: var(--blue); }
+  .acc-card:nth-child(4n+4) .acc-top { background: var(--orange); }
+  .acc-body { padding: 12px 14px 16px; }
+  .acc-badge {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 9px; font-weight: 800; letter-spacing: 1px;
+    padding: 3px 8px; border: 2px solid var(--black);
+    text-transform: uppercase;
+  }
+  .badge-best { background: var(--yellow); color: var(--black); }
+  .badge-alt  { background: var(--blue); color: var(--black); }
+  .badge-new  { background: var(--pink); color: var(--white); }
+  .acc-cat { font-size: 9px; font-weight: 800; color: #999; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .acc-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 4px; }
+  .acc-detail { font-size: 11px; color: #777; line-height: 1.4; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--orange); border-top: var(--border4);
+    padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-links { display: flex; gap: 0; }
+  .footer-links a {
+    color: var(--black); text-decoration: none; font-size: 12px; font-weight: 700;
+    padding: 0 16px; border-right: 2px solid rgba(0,0,0,0.3);
+    letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.15s;
+    cursor: none;
+  }
+  .footer-links a:hover { color: var(--white); }
+  .footer-links a:first-child { padding-left: 0; }
+  .footer-links a:last-child { border-right: none; }
+  .footer-copy { font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.55); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--black); border: var(--border4); border-color: var(--yellow);
+    padding: 12px 28px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px;
+    color: var(--yellow); z-index: 999; box-shadow: var(--shadow6);
+    white-space: nowrap;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ─── REVEAL ─── */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-left { opacity: 0; transform: translateX(-24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal-left.visible { opacity: 1; transform: none; }
+  .reveal-right { opacity: 0; transform: translateX(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal-right.visible { opacity: 1; transform: none; }
+
+  /* ─── SECTION STAGGER ─── */
+  .stagger > * { transition-delay: calc(var(--i, 0) * 0.07s); }
+
+  @media (max-width: 900px) {
+    body { cursor: auto; }
+    #cursor, #cursor-trail { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .generate-section { flex-direction: column; }
+    .gen-right { width: 100%; }
+    .combinations-grid, .acc-grid { grid-template-columns: repeat(2,1fr); }
+    .tryon-inner { grid-template-columns: 1fr; }
+    .roast-inner { grid-template-columns: 1fr; }
+    .trend-grid { grid-template-columns: 1fr; }
+    .modal { grid-template-columns: 1fr; }
+    .modal-img { height: 220px; }
+    .tryon-section, .roast-section, .trend-section { padding: 26px 18px; }
+  }
+  @media (max-width: 560px) {
+    .product-card { width: 100%; border-right: none; }
+    .tryon-left, .tryon-right, .trend-card { padding: 18px; }
+    .trend-heading, .roast-heading, .tryon-heading { font-size: 40px; }
+    .roast-photo-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-links">
+    <a href="#shop">Shop</a>
+    <a href="#generate">Generate</a>
+    <a href="#tryon">Try-On</a>
+    <a href="#roast">Roast Me</a>
+    <a href="#trend">Trends</a>
+  </div>
+  <div class="nav-logo">LOOKGEN AI</div>
+  <div class="nav-icons">
+    <button class="nav-icon" title="Search">🔍</button>
+    <button class="nav-icon" title="Cart">🛒</button>
+  </div>
+</nav>
+
+<!-- TAB BAR -->
+<div class="tab-bar" id="shop">
+  <button class="tab active" onclick="setTab(this,'Business')">Business</button>
+  <button class="tab" onclick="setTab(this,'Casual')">Casual</button>
+  <button class="tab" onclick="setTab(this,'Evening Out')">Evening Out</button>
+  <button class="tab" onclick="setTab(this,'Date Night')">Date Night</button>
+  <button class="tab" onclick="setTab(this,'Weekend')">Weekend</button>
+  <button class="tab" onclick="setTab(this,'Gym')">Gym</button>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-heading">SHOP</div>
+    <div class="sidebar-category active" onclick="setSidebarCat(this,'all')">
+      <span class="sidebar-arrow">↓</span> Singles
+    </div>
+    <div class="sidebar-section">
+      <button class="sidebar-item active" onclick="setSidebarItem(this,'all')">
+        <div class="check">✓</div> Show All
+      </button>
+      <button class="sidebar-item" onclick="setSidebarItem(this,'regulars')">
+        <div class="check"></div> Regulars
+      </button>
+      <button class="sidebar-item" onclick="setSidebarItem(this,'specials')">
+        <div class="check"></div> Specials
+      </button>
+    </div>
+    <div class="sidebar-category" onclick="setSidebarCat(this,'boxes')">
+      <span class="sidebar-arrow">→</span> Boxes
+    </div>
+    <div class="sidebar-section" style="margin-top:auto;border-top:var(--border);border-bottom:none;">
+      <div class="sidebar-section-title">Your Type</div>
+      <button class="sidebar-item active" data-group="type" data-val="Masc" onclick="setType(this)">
+        <div class="check">✓</div> Masc
+      </button>
+      <button class="sidebar-item" data-group="type" data-val="Fem" onclick="setType(this)">
+        <div class="check"></div> Fem
+      </button>
+    </div>
+  </aside>
+  <main class="main-content">
+    <div class="product-grid" id="productGrid"></div>
+  </main>
+</div>
+
+<!-- GENERATE SECTION -->
+<section class="generate-section" id="generate">
+  <div class="gen-left">
+    <div class="gen-heading">GENERATE YOUR LOOK</div>
+    <div style="margin-bottom:16px;">
+      <span class="chip-label">Style Vibe</span>
+      <div class="gen-chips" id="chips-vibe">
+        <button class="chip active-v" data-group="vibe" data-val="Minimal">Minimal</button>
+        <button class="chip" data-group="vibe" data-val="Streetwear">Streetwear</button>
+        <button class="chip" data-group="vibe" data-val="Classic">Classic</button>
+        <button class="chip" data-group="vibe" data-val="Bold">Bold</button>
+        <button class="chip" data-group="vibe" data-val="Techwear">Techwear</button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <span class="chip-label">Season</span>
+      <div class="gen-chips" id="chips-season">
+        <button class="chip" data-group="season" data-val="Spring">Spring</button>
+        <button class="chip active" data-group="season" data-val="Summer">Summer</button>
+        <button class="chip" data-group="season" data-val="Autumn">Autumn</button>
+        <button class="chip" data-group="season" data-val="Winter">Winter</button>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <span class="chip-label">Preferred Colors</span>
+      <div class="color-swatches" id="swatches">
+        <div class="swatch active" data-color="Monochrome" style="background:#1a1a1a;"></div>
+        <div class="swatch" data-color="Navy" style="background:#1a3a6b;"></div>
+        <div class="swatch" data-color="Earth Tones" style="background:#8B6F47;"></div>
+        <div class="swatch" data-color="Pastels" style="background:#F7CAC9;"></div>
+        <div class="swatch" data-color="Bold Colors" style="background:#E63946;"></div>
+        <div class="swatch" data-color="Olive" style="background:#6B8E23;"></div>
+        <div class="swatch" data-color="Blush" style="background:#FFB6C1;"></div>
+        <div class="swatch" data-color="Cobalt" style="background:#0047AB;"></div>
+      </div>
+    </div>
+    <button class="gen-btn" id="generateBtn" onclick="generateOutfit()">
+      <span class="btn-text">✦ GENERATE OUTFIT</span>
+      <span class="btn-loader"><div class="spinner"></div></span>
+    </button>
+  </div>
+  <div class="gen-right">
+    <div class="outfit-result" id="outfitResult">
+      <div class="outfit-result-header">
+        <div class="outfit-result-title" id="outfitName">YOUR LOOK</div>
+        <div class="outfit-score-badge" id="outfitVibeBadge">—</div>
+      </div>
+      <div id="outfitPlaceholder" class="outfit-placeholder">
+        <div class="outfit-placeholder-icon">✦</div>
+        <p>Set your preferences and generate a look</p>
+      </div>
+      <div id="outfitBody" style="display:none;">
+        <div class="outfit-avatar-row">
+          <div class="avatar-box">
+            <svg id="avatarSvg" viewBox="0 0 180 320" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="outfit-pieces-list" id="outfitPieces"></div>
+        </div>
+      </div>
+      <div class="outfit-score-bar">
+        <div class="score-ring">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="18" stroke="rgba(245,200,66,0.15)" stroke-width="3" fill="none"/>
+            <circle cx="24" cy="24" r="18" stroke="#F5C842" stroke-width="3" fill="none" stroke-linecap="round" id="scoreArc" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+          </svg>
+          <div class="score-ring-label" id="scoreLabel">—</div>
+        </div>
+        <div class="score-text">
+          <div class="score-title" id="scoreTitleTxt">STYLE SCORE</div>
+          <div class="score-sub" id="scoreSubTxt">Generate an outfit to see your score</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI TRY-ON SECTION -->
+<section class="tryon-section reveal" id="tryon">
+  <div class="tryon-inner">
+    <!-- Left: upload -->
+    <div class="tryon-left">
+      <div>
+        <div class="tryon-label">✦ New Feature</div>
+        <h2 class="tryon-heading">AI VIRTUAL<br>TRY-ON</h2>
+      </div>
+      <p class="tryon-desc">Upload your photo and see yourself in any generated outfit. Drag the slider to compare before and after. Pure AI magic — no fitting room needed.</p>
+      <input type="file" id="tryonInput" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="upload-dropzone" id="tryonDropzone" onclick="openTryOnPicker()">
+        <span class="upload-icon-big">📸</span>
+        <div class="upload-main-text">Drop your photo here</div>
+        <div class="upload-sub-text">JPG · PNG · WEBP · Max 10MB</div>
+        <button class="upload-btn-inline" onclick="event.stopPropagation(); openTryOnPicker()">UPLOAD PHOTO</button>
+      </div>
+      <div class="upload-selected-text" id="tryonUploadStatus">NO PHOTO SELECTED</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;border:var(--border);padding:10px 14px;background:#f9f7f0;box-shadow:var(--shadow);">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#999;margin-bottom:4px;">Step 1</div>
+          <div style="font-size:12px;font-weight:700;">Upload your photo</div>
+        </div>
+        <div style="flex:1;border:var(--border);padding:10px 14px;background:#f9f7f0;box-shadow:var(--shadow);">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#999;margin-bottom:4px;">Step 2</div>
+          <div style="font-size:12px;font-weight:700;">Generate a look</div>
+        </div>
+        <div style="flex:1;border:var(--border);padding:10px 14px;background:#f9f7f0;box-shadow:var(--shadow);">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#999;margin-bottom:4px;">Step 3</div>
+          <div style="font-size:12px;font-weight:700;">Drag to compare</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: preview -->
+    <div class="tryon-right">
+      <div class="tryon-right-label">PREVIEW WINDOW</div>
+      <div class="tryon-preview-area" id="tryonPreview">
+        <div class="tryon-placeholder-text">YOUR<br>LOOK<br>HERE</div>
+        <div class="scan-line" id="tryonScanLine"></div>
+        <!-- Before/After -->
+        <div class="before-after-wrap" id="beforeAfterWrap">
+          <div class="before-panel">
+            <div class="before-avatar-display">
+              <img class="tryon-photo" id="tryonBeforeImg" alt="Uploaded outfit photo before styling">
+              <svg viewBox="0 0 180 320" fill="none" id="beforeAvatarSvg"></svg>
+            </div>
+            <div class="before-label">BEFORE</div>
+          </div>
+          <div class="after-panel" id="afterPanel">
+            <div class="after-avatar-display">
+              <img class="tryon-photo" id="tryonAfterImg" alt="Uploaded outfit photo after styling">
+              <div class="tryon-look-wash" id="tryonLookWash"></div>
+              <svg viewBox="0 0 180 320" fill="none" id="afterAvatarSvg"></svg>
+              <div class="tryon-look-overlay" id="tryonLookOverlay">
+                <div class="tryon-look-kicker">AI Styled Overlay</div>
+                <div class="tryon-look-title" id="tryonLookTitle">LOOK READY</div>
+                <div class="tryon-look-meta" id="tryonLookMeta">
+                  <span>Upload</span>
+                  <span>Generate</span>
+                  <span>Compare</span>
+                </div>
+              </div>
+            </div>
+            <div class="after-label">AFTER</div>
+          </div>
+          <div class="slider-line" id="sliderLine">
+            <div class="slider-handle">◀▶</div>
+          </div>
+        </div>
+      </div>
+      <button class="tryon-scan-btn" onclick="triggerTryOn()"><span>⚡ RUN AI TRY-ON</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- FASHION ROAST SECTION -->
+<section class="roast-section reveal" id="roast">
+  <div class="roast-inner">
+    <div class="roast-left-header reveal-left">
+      <div class="roast-tag"><span class="roast-fire">🔥</span> AI Fashion Roast</div>
+      <h2 class="roast-heading">GET<br>ROASTED<br>BY AI.</h2>
+      <p class="roast-subtext">Upload your outfit photo and our brutally honest AI will score it, judge it, and tell you exactly what's working — and what isn't. No sugarcoating.</p>
+      <input type="file" id="roastInput" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="roast-upload-zone" id="roastUploadZone" onclick="openRoastPicker()">
+        <div class="roast-upload-icon">🤳</div>
+        <div class="roast-upload-text">Drop your fit pic here</div>
+        <div class="roast-upload-sub">We won't hold back</div>
+        <div class="roast-upload-meta" id="roastUploadStatus">NO PHOTO SELECTED</div>
+      </div>
+      <button class="roast-trigger-btn" onclick="triggerRoast()"><span>🔥 ROAST MY OUTFIT</span></button>
+    </div>
+
+    <div class="roast-right reveal-right">
+      <!-- Idle state -->
+      <div class="roast-idle" id="roastIdle">
+        <div class="roast-idle-icon">👀</div>
+        <h3>THE AI IS WATCHING</h3>
+        <p>Upload your outfit and brace yourself. The AI has zero chill and will rate your look with the honesty of a brutally real friend.</p>
+      </div>
+
+      <!-- Result card (hidden until triggered) -->
+      <div class="roast-result-card" id="roastResult">
+        <div class="roast-result-header">
+          <div>
+            <div class="roast-result-title">AI VERDICT</div>
+            <div class="roast-result-score" id="roastScore">—</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:6px;">Vibe Check</div>
+            <div id="roastVibePill" style="display:inline-block;padding:5px 14px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;border:2px solid var(--yellow);background:var(--yellow);color:var(--black);">—</div>
+          </div>
+        </div>
+
+        <div class="roast-photo-row" id="roastPhotoRow">
+          <div class="roast-photo-thumb">
+            <img id="roastPreviewImg" alt="Uploaded outfit photo">
+          </div>
+          <div class="roast-photo-meta">
+            <div class="roast-photo-kicker">Uploaded Fit</div>
+            <div class="roast-photo-title" id="roastPhotoTitle">LOOK CHECK</div>
+            <div class="roast-photo-sub" id="roastPhotoSub">Waiting for analysis</div>
+          </div>
+        </div>
+
+        <div class="roast-verdict">
+          <div class="roast-quote-mark">"</div>
+          <div class="roast-verdict-text" id="roastVerdict"></div>
+        </div>
+
+        <div class="roast-tags-row" id="roastTags"></div>
+
+        <div class="roast-meter-row">
+          <div>
+            <div class="roast-meter-label"><span>Colour Harmony</span><span id="mColor">—</span></div>
+            <div class="roast-meter-bar"><div class="roast-meter-fill" id="fillColor" style="background:var(--blue);"></div></div>
+          </div>
+          <div>
+            <div class="roast-meter-label"><span>Fit & Silhouette</span><span id="mFit">—</span></div>
+            <div class="roast-meter-bar"><div class="roast-meter-fill" id="fillFit" style="background:var(--pink);"></div></div>
+          </div>
+          <div>
+            <div class="roast-meter-label"><span>Trend Alignment</span><span id="mTrend">—</span></div>
+            <div class="roast-meter-bar"><div class="roast-meter-fill" id="fillTrend" style="background:var(--yellow);"></div></div>
+          </div>
+          <div>
+            <div class="roast-meter-label"><span>Occasion Match</span><span id="mOcc">—</span></div>
+            <div class="roast-meter-bar"><div class="roast-meter-fill" id="fillOcc" style="background:var(--orange);"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TREND INTELLIGENCE -->
+<section class="trend-section reveal" id="trend">
+  <div class="trend-inner">
+    <div class="trend-header">
+      <div>
+        <div class="trend-tag">✦ Trend Intelligence</div>
+        <h2 class="trend-heading">WHAT'S TRENDING<br>FOR YOUR LOOK</h2>
+      </div>
+      <p class="trend-subtext">Live style guidance for the currently selected outfit. Trend score, rising directions, and AI notes all update when the generated look changes.</p>
+    </div>
+
+    <div class="trend-grid">
+      <div class="trend-card trend-score-card">
+        <div>
+          <div class="trend-card-kicker" style="color:rgba(255,255,255,0.5);">Trend Score</div>
+          <div class="trend-score-value" id="trendScoreValue">84</div>
+          <div class="trend-score-caption" id="trendScoreCaption">Strong trend alignment with room for a bolder accent.</div>
+        </div>
+        <div class="trend-bars">
+          <div>
+            <div class="trend-bar-label"><span>Relevance</span><span id="trendRelevanceLabel">84%</span></div>
+            <div class="trend-bar-track"><div class="trend-bar-fill" id="trendRelevanceFill" style="background:var(--yellow);"></div></div>
+          </div>
+          <div>
+            <div class="trend-bar-label"><span>Wearability</span><span id="trendWearabilityLabel">88%</span></div>
+            <div class="trend-bar-track"><div class="trend-bar-fill" id="trendWearabilityFill" style="background:var(--blue);"></div></div>
+          </div>
+          <div>
+            <div class="trend-bar-label"><span>Freshness</span><span id="trendFreshnessLabel">80%</span></div>
+            <div class="trend-bar-track"><div class="trend-bar-fill" id="trendFreshnessFill" style="background:var(--pink);"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trend-card">
+        <div class="trend-card-kicker">Trending Styles</div>
+        <div class="trend-chip-grid" id="trendChipGrid"></div>
+      </div>
+
+      <div class="trend-card">
+        <div class="trend-card-kicker">AI Fashion Insights</div>
+        <div class="trend-insight-list" id="trendInsightList"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMBINATIONS -->
+<section class="combinations-section reveal">
+  <div class="section-header">
+    <div class="section-tag">Style Variations</div>
+    <div class="section-title">OUTFIT COMBINATIONS</div>
+  </div>
+  <div class="combinations-grid" id="carousel"></div>
+</section>
+
+<!-- ACCESSORIES -->
+<section class="accessories-section reveal">
+  <div class="section-header">
+    <div class="section-tag">Complete the Look</div>
+    <div class="section-title">ACCESSORIES</div>
+  </div>
+  <div class="acc-grid" id="accGrid"></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="#">FAQ</a>
+    <a href="#">Terms & Conditions</a>
+    <a href="#">Customer Service</a>
+  </div>
+  <div class="footer-copy">© 2025 LookGen AI. All rights reserved.</div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-img" id="modalImg">👔</div>
+    <div class="modal-body">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-info">
+        <div class="modal-title" id="modalTitle">Outfit Name</div>
+        <div class="modal-desc" id="modalDesc">Outfit description goes here.</div>
+      </div>
+      <div class="modal-qty-section">
+        <div class="qty-row">
+          <span class="qty-label">Singles</span>
+          <div class="qty-controls">
+            <button class="qty-btn minus" onclick="changeQty('singles',-1)">−</button>
+            <div class="qty-num" id="qtyS">1</div>
+            <button class="qty-btn plus" onclick="changeQty('singles',1)">+</button>
+          </div>
+        </div>
+        <div class="qty-row" style="border:none;margin:0;padding:0;">
+          <span class="qty-label">12-pc box</span>
+          <div class="qty-controls">
+            <button class="qty-btn minus" onclick="changeQty('box',-1)">−</button>
+            <div class="qty-num" id="qtyB">0</div>
+            <button class="qty-btn plus" onclick="changeQty('box',1)">+</button>
+          </div>
+        </div>
+      </div>
+      <button class="modal-add-btn">ADD TO CART 🛒</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════
+   CUSTOM CURSOR
+══════════════════════════════════════ */
+const cur = document.getElementById('cursor');
+const trail = document.getElementById('cursor-trail');
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px';
+  cur.style.top  = my + 'px';
+  setTimeout(() => {
+    trail.style.left = mx + 'px';
+    trail.style.top  = my + 'px';
+  }, 80);
+});
+document.addEventListener('mousedown', () => cur.classList.add('active-click'));
+document.addEventListener('mouseup',   () => cur.classList.remove('active-click'));
+document.querySelectorAll('button, a, .chip, .swatch, .product-card, .combo-card, .acc-card, .sidebar-item, .tab, .upload-dropzone, .roast-upload-zone').forEach(el => {
+  el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+});
+
+/* ══════════════════════════════════════
+   NAV HIDE ON SCROLL
+══════════════════════════════════════ */
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const cs = window.scrollY;
+  const nav = document.getElementById('mainNav');
+  if (cs > lastScroll && cs > 120) nav.classList.add('hidden');
+  else nav.classList.remove('hidden');
+  lastScroll = cs;
+});
+
+/* ══════════════════════════════════════
+   DATA
+══════════════════════════════════════ */
+const OUTFITS = {
+  "Business+Minimal": { name:"The Power Neutral", emoji:"🧥", desc:"Clean, authoritative lines with a dove grey blazer and slim trousers. The go-to for commanding any boardroom.", pieces:[{icon:"👔",name:"Slim-Cut Blazer",detail:"Dove grey wool blend",match:"Best Match"},{icon:"👕",name:"Fitted White Shirt",detail:"Egyptian cotton · Poplin",match:"Essential"},{icon:"👖",name:"Slim Trousers",detail:"Charcoal · Tapered cut",match:"Best Match"},{icon:"👞",name:"Oxford Derby Shoes",detail:"Black calfskin",match:"Best Match"}], score:9.2, color:"Monochrome" },
+  "Business+Classic": { name:"Executive Presence", emoji:"👔", desc:"Navy pinstripe double-breasted with French cuffs. Instantly commands respect in any professional setting.", pieces:[{icon:"🧥",name:"Double-Breasted Suit",detail:"Navy pinstripe · Italian cut",match:"Best Match"},{icon:"👔",name:"French Cuff Shirt",detail:"White · Spread collar",match:"Essential"},{icon:"👔",name:"Silk Repp Tie",detail:"Burgundy & navy stripe",match:"Best Match"},{icon:"👞",name:"Cap Toe Brogues",detail:"Dark brown · Full brogue",match:"Alt Pick"}], score:9.5, color:"Navy" },
+  "Casual+Streetwear": { name:"Urban Off-Duty", emoji:"🧢", desc:"Oversized bomber meets chunky sneakers. The effortless street-ready look that turns heads without trying.", pieces:[{icon:"🧥",name:"Oversized Bomber",detail:"Sage green · Ribbed cuffs",match:"Best Match"},{icon:"👕",name:"Graphic Tee",detail:"Washed black · Minimal print",match:"Essential"},{icon:"👖",name:"Baggy Cargo Pants",detail:"Stone · Multiple pockets",match:"Best Match"},{icon:"👟",name:"Chunky Sneakers",detail:"White leather · Platform sole",match:"Best Match"}], score:8.7, color:"Earth Tones" },
+  "Casual+Minimal": { name:"Clean Canvas", emoji:"👕", desc:"Oatmeal crewneck and straight-leg jeans. Proof that less is always more when executed with precision.", pieces:[{icon:"👕",name:"Cotton Crewneck",detail:"Oatmeal · Boxy fit",match:"Best Match"},{icon:"👖",name:"Straight Jeans",detail:"Light wash · Raw hem",match:"Best Match"},{icon:"👟",name:"Low-Top Sneakers",detail:"White canvas · Vulcanized",match:"Essential"},{icon:"🧣",name:"Linen Tote Bag",detail:"Natural · Minimal branding",match:"Alt Pick"}], score:8.4, color:"Monochrome" },
+  "Evening Out+Bold": { name:"Statement Night", emoji:"🌙", desc:"Midnight velvet blazer with a silk mock-neck. A look designed to own every room after dark.", pieces:[{icon:"🧥",name:"Velvet Blazer",detail:"Midnight blue · Shawl lapel",match:"Best Match"},{icon:"👕",name:"Silk Mock-Neck",detail:"Black · Slim fit",match:"Essential"},{icon:"👖",name:"Tailored Trousers",detail:"Black · Cropped length",match:"Best Match"},{icon:"👞",name:"Chelsea Boots",detail:"Black suede · Cuban heel",match:"Best Match"}], score:9.1, color:"Monochrome" },
+  "Date Night+Classic": { name:"Refined Romance", emoji:"🌹", desc:"Camel overcoat and cream knit polo. The timeless combination that reads sophisticated yet approachable.", pieces:[{icon:"🧥",name:"Wool Overcoat",detail:"Camel · Notch lapel",match:"Best Match"},{icon:"👔",name:"Knit Polo",detail:"Cream merino · Ribbed collar",match:"Essential"},{icon:"👖",name:"Chino Trousers",detail:"Olive · Slim tapered",match:"Best Match"},{icon:"👞",name:"Suede Loafers",detail:"Tan · Penny detail",match:"Best Match"}], score:8.9, color:"Earth Tones" },
+  "Weekend+Casual": { name:"Weekend Wanderer", emoji:"🌿", desc:"Quilted vest over a washed henley with trail runners. Built for adventure, designed to look good doing it.", pieces:[{icon:"👕",name:"Henley Shirt",detail:"Forest green · Washed cotton",match:"Best Match"},{icon:"🧥",name:"Quilted Vest",detail:"Charcoal · Down-filled",match:"Alt Pick"},{icon:"👖",name:"5-Pocket Cords",detail:"Tan · Straight cut",match:"Best Match"},{icon:"👟",name:"Trail Runners",detail:"Grey multicolor · Gore-Tex",match:"Best Match"}], score:8.2, color:"Olive" },
+  "Gym+Techwear": { name:"Performance First", emoji:"⚡", desc:"Compression base layer, wind-resistant shell, and react-foam trainers. Maximum output, minimum drag.", pieces:[{icon:"👕",name:"Compression Top",detail:"Black · 4-way stretch",match:"Best Match"},{icon:"🩳",name:"Training Shorts",detail:"Charcoal · 7-inch inseam",match:"Essential"},{icon:"🧥",name:"Wind Jacket",detail:"Reflective piping · Packable",match:"Best Match"},{icon:"👟",name:"Training Shoes",detail:"White/grey · React foam",match:"Best Match"}], score:8.8, color:"Monochrome" }
+};
+
+const OCCASIONS = ["Business","Casual","Evening Out","Date Night","Weekend","Gym"];
+
+const ACCESSORIES_DATA = [
+  {icon:"⌚",cat:"Timepiece",name:"Minimalist Watch",detail:"38mm case · Milanese loop",badge:"Best Match",badgeClass:"badge-best"},
+  {icon:"👜",cat:"Bag",name:"Structured Tote",detail:"Full-grain leather · Organizer",badge:"Best Match",badgeClass:"badge-best"},
+  {icon:"🕶️",cat:"Eyewear",name:"Geometric Frames",detail:"Acetate · UV400 · Tortoiseshell",badge:"Alt Pick",badgeClass:"badge-alt"},
+  {icon:"💍",cat:"Jewellery",name:"Signet Ring",detail:"Sterling silver · Matte finish",badge:"New",badgeClass:"badge-new"},
+  {icon:"🧤",cat:"Gloves",name:"Driving Gloves",detail:"Unlined · Perforated · Tan",badge:"Best Match",badgeClass:"badge-best"},
+  {icon:"🎒",cat:"Bag",name:"Slim Backpack",detail:"Waxed canvas · Laptop sleeve",badge:"Alt Pick",badgeClass:"badge-alt"},
+  {icon:"🧢",cat:"Headwear",name:"5-Panel Cap",detail:"Cotton twill · Curved brim",badge:"New",badgeClass:"badge-new"},
+  {icon:"💼",cat:"Bag",name:"Portfolio Case",detail:"PU exterior · A4 documents",badge:"Best Match",badgeClass:"badge-best"},
+];
+
+const VARIATIONS = [
+  {tag:"PRIMARY", desc:"Your perfect match based on all preferences."},
+  {tag:"ALT",     desc:"Same vibe, different silhouette — slightly looser."},
+  {tag:"ELEVATED",desc:"Step it up with premium materials and accessories."},
+];
+
+/* ── ROAST DATA ── */
+const ROAST_DATA = [
+  {
+    score:"7.4", vibe:"SAFE BUT SOLID",
+    verdict: "Okay, listen — this isn't bad, it's just... beige. Literally and spiritually. You've clearly read a 'how to dress' blog post from 2017 and took notes. The fit is clean, the palette is safe, but there's absolutely zero personality happening here. Your outfit has the energy of a LinkedIn profile. Add one statement piece and we can talk.",
+    tags:[{label:"Neutral Palette",type:"neutral"},{label:"Safe Fit",type:"neutral"},{label:"Needs Edge",type:"bad"},{label:"Clean Silhouette",type:"good"}],
+    metrics:{color:72, fit:80, trend:55, occ:85}
+  },
+  {
+    score:"5.1", vibe:"WE NEED TO TALK",
+    verdict: "I'm going to be direct with you because someone needs to be. The proportions are fighting each other like two strangers sharing an Uber. The top is oversized, the pants are slim, the shoes are... where did you get those? There's no throughline here. It looks like you got dressed in the dark by three different people who hate each other.",
+    tags:[{label:"Proportion Issues",type:"bad"},{label:"No Cohesion",type:"bad"},{label:"Bold Attempt",type:"neutral"},{label:"Worth Saving",type:"good"}]  ,
+    metrics:{color:48, fit:40, trend:60, occ:52}
+  },
+  {
+    score:"9.1", vibe:"ACTUALLY FIRE 🔥",
+    verdict: "Okay I'll admit it — I came here ready to roast and now I'm just... impressed? The colour coordination is genuinely thoughtful, the silhouette works with your frame, and whoever told you to add that layering piece deserves a raise. This is a put-together, intentional look. The accessories don't try too hard. You actually know what you're doing and that's deeply annoying because I had nothing to roast.",
+    tags:[{label:"Great Palette",type:"good"},{label:"Flattering Fit",type:"good"},{label:"Strong Layering",type:"good"},{label:"Minimal Issues",type:"neutral"}],
+    metrics:{color:93, fit:91, trend:88, occ:90}
+  },
+  {
+    score:"6.2", vibe:"MID ENERGY",
+    verdict: "This is what I call a 'participation trophy' outfit. You showed up, you made choices, and technically nothing is wrong. But nothing is right either. The colours are doing a slow, awkward handshake. The shoes feel like they wandered in from a different photoshoot. I see effort, but effort doesn't equal execution. You're 70% of the way there — push it over the edge.",
+    tags:[{label:"Mismatched Shoes",type:"bad"},{label:"Decent Base",type:"neutral"},{label:"Color Clash",type:"bad"},{label:"Room to Grow",type:"good"}],
+    metrics:{color:58, fit:65, trend:62, occ:70}
+  }
+];
+let roastIdx = 0;
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let state = { occasion:"Business", vibe:"Minimal", color:"Monochrome", type:"Masc", season:"Summer" };
+let modalQtys = {singles:1, box:0};
+let lastOutfit = null;
+let uploadedTryOn = null;
+let uploadedRoast = null;
+let tryonRunning = false;
+let roasting = false;
+let tryonSliderBound = false;
+
+/* ══════════════════════════════════════
+   TAB / SIDEBAR
+══════════════════════════════════════ */
+function setTab(el, occasion) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  state.occasion = occasion;
+  renderProductGrid();
+}
+function setSidebarCat(el) {
+  document.querySelectorAll('.sidebar-category').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+function setSidebarItem(el) {
+  document.querySelectorAll('.sidebar-item[onclick*="setSidebarItem"]').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+function setType(el) {
+  document.querySelectorAll('[data-group="type"]').forEach(e => {
+    e.classList.remove('active');
+    e.querySelector('.check').textContent = '';
+  });
+  el.classList.add('active');
+  el.querySelector('.check').textContent = '✓';
+  state.type = el.dataset.val;
+}
+
+/* ── CHIPS ── */
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const g = chip.dataset.group;
+    const isVibe = g === 'vibe';
+    document.querySelectorAll(`[data-group="${g}"]`).forEach(c => c.classList.remove('active','active-v'));
+    chip.classList.add(isVibe ? 'active-v' : 'active');
+    state[g] = chip.dataset.val;
+  });
+});
+
+document.querySelectorAll('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    state.color = sw.dataset.color;
+  });
+});
+
+/* ══════════════════════════════════════
+   PRODUCT GRID
+══════════════════════════════════════ */
+const PRODUCT_CARDS = [
+  {name:"Super Oreo",emoji:"🍫",price:"$5",special:"★ Fan Fav",style:"Business"},
+  {name:"Butterbeer",emoji:"🧁",price:"$5",special:"",style:"Business"},
+  {name:"Sprinkle Surprise",emoji:"🎉",price:"$5",special:"★ Special",style:"Casual"},
+  {name:"Choco Mint",emoji:"🍃",price:"$5",special:"",style:"Casual"},
+  {name:"Velvet Dream",emoji:"❤️",price:"$6",special:"★ New",style:"Evening Out"},
+  {name:"Citrus Burst",emoji:"🍋",price:"$5",special:"",style:"Evening Out"},
+  {name:"Rosé Cloud",emoji:"🌸",price:"$6",special:"★ Special",style:"Date Night"},
+  {name:"Caramel Classic",emoji:"🍯",price:"$5",special:"",style:"Date Night"},
+  {name:"Forest Fudge",emoji:"🌲",price:"$5",special:"★ Seasonal",style:"Weekend"},
+  {name:"Trail Mix",emoji:"🥜",price:"$5",special:"",style:"Weekend"},
+  {name:"Protein Power",emoji:"💪",price:"$6",special:"★ Best Seller",style:"Gym"},
+  {name:"Energy Boost",emoji:"⚡",price:"$5",special:"",style:"Gym"},
+];
+
+function renderProductGrid() {
+  const grid = document.getElementById('productGrid');
+  const items = PRODUCT_CARDS.filter(p => !state.occasion || p.style === state.occasion || state.occasion === 'all');
+  grid.innerHTML = (items.length ? items : PRODUCT_CARDS.slice(0,6)).map(p => `
+    <div class="product-card" onclick="openModal('${p.name}','${p.emoji}','${p.price}')">
+      <div class="card-img-placeholder" style="background:${cardBg(p.style)};">
+        <span>${p.emoji}</span>
+      </div>
+      <div class="card-price-tag">${p.price}</div>
+      ${p.special ? `<div class="card-special-tag">${p.special}</div>` : ''}
+      <div class="card-body">
+        <div class="card-name">${p.name}</div>
+        <div class="card-sub">${p.style} Collection</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-footer-price">${p.price}</div>
+        <button class="card-buy-btn">BUY NOW</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function cardBg(style) {
+  const map = {"Business":"#EEF4FF","Casual":"#FFF5EE","Evening Out":"#F5E8FF","Date Night":"#FFF0F5","Weekend":"#F0FFF4","Gym":"#F5F5F5"};
+  return map[style] || "#F5F5F5";
+}
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+function openModal(name, emoji, price) {
+  document.getElementById('modalTitle').textContent = name;
+  document.getElementById('modalImg').textContent = emoji;
+  document.getElementById('modalDesc').textContent = `Are you looking for something bold? Try our ${name} — crafted with care and style, this piece is sure to become your new favourite.`;
+  document.getElementById('qtyS').textContent = 1;
+  document.getElementById('qtyB').textContent = 0;
+  modalQtys = {singles:1, box:0};
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOnBg(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+function changeQty(type, delta) {
+  modalQtys[type] = Math.max(0, (modalQtys[type] || 0) + delta);
+  document.getElementById(type === 'singles' ? 'qtyS' : 'qtyB').textContent = modalQtys[type];
+}
+
+/* ══════════════════════════════════════
+   GENERATE
+══════════════════════════════════════ */
+function getOutfitKey() {
+  const key = `${state.occasion}+${state.vibe}`;
+  if (OUTFITS[key]) return key;
+  const fb = Object.keys(OUTFITS).filter(k => k.startsWith(state.occasion));
+  return fb.length ? fb[0] : Object.keys(OUTFITS)[0];
+}
+
+function generateOutfit() {
+  const btn = document.getElementById('generateBtn');
+  btn.classList.add('loading');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    const key = getOutfitKey();
+    const outfit = OUTFITS[key];
+    lastOutfit = outfit;
+    renderOutfit(outfit);
+    renderCarousel(key);
+    renderAccessories();
+    showToast('✦ LOOK GENERATED');
+    document.querySelector('.generate-section').scrollIntoView({behavior:'smooth'});
+  }, 1400);
+}
+
+function renderOutfit(outfit) {
+  document.getElementById('outfitPlaceholder').style.display = 'none';
+  document.getElementById('outfitBody').style.display = 'block';
+  document.getElementById('avatarSvg').innerHTML = buildAvatar(state.type, outfit.color);
+  document.getElementById('outfitName').textContent = outfit.name.toUpperCase();
+  document.getElementById('outfitVibeBadge').textContent = `${state.vibe} · ${state.occasion}`;
+
+  document.getElementById('outfitPieces').innerHTML = outfit.pieces.map((p, i) => `
+    <div class="piece-row" style="animation-delay:${i * 0.06}s">
+      <span class="piece-emoji">${p.icon}</span>
+      <div class="piece-info">
+        <div class="piece-name">${p.name}</div>
+        <div class="piece-detail">${p.detail}</div>
+      </div>
+      <div class="piece-tag">${p.match}</div>
+    </div>
+  `).join('');
+
+  const score = outfit.score;
+  const arc = document.getElementById('scoreArc');
+  setTimeout(() => {
+    arc.style.strokeDashoffset = 113.1 - (score / 10) * 113.1;
+  }, 100);
+  document.getElementById('scoreLabel').textContent = score;
+  document.getElementById('scoreTitleTxt').textContent = `STYLE SCORE: ${score}/10`;
+  document.getElementById('scoreSubTxt').textContent = getScoreDesc(score);
+  updateTryOnOverlay(outfit);
+  renderTrendIntel(outfit);
+}
+
+function getScoreDesc(s) {
+  if (s >= 9) return 'Exceptional — head-turning look ✦';
+  if (s >= 8) return 'Strong — well-coordinated and sharp';
+  if (s >= 7) return 'Good — solid foundation, room to play';
+  return 'Decent — a few swaps could elevate this';
+}
+
+/* ══════════════════════════════════════
+   AVATAR
+══════════════════════════════════════ */
+function getAvatarColors(color) {
+  const m = {
+    "Monochrome":  {top:"#1a1a1a",bottom:"#111",shoe:"#000",acc:"#F5C842",skin:"#FDBCB4"},
+    "Navy":        {top:"#1a3a6b",bottom:"#0d2040",shoe:"#111",acc:"#F5C842",skin:"#FDBCB4"},
+    "Earth Tones": {top:"#8B6F47",bottom:"#5B3A20",shoe:"#3a2010",acc:"#F5C842",skin:"#C68642"},
+    "Pastels":     {top:"#F7CAC9",bottom:"#C9A8B4",shoe:"#9B8090",acc:"#F5C842",skin:"#FDBCB4"},
+    "Bold Colors": {top:"#E63946",bottom:"#1a1a1a",shoe:"#111",acc:"#F5C842",skin:"#FDBCB4"},
+    "Olive":       {top:"#6B8E23",bottom:"#3a4a10",shoe:"#2c1810",acc:"#F5C842",skin:"#C68642"},
+    "Blush":       {top:"#FFB6C1",bottom:"#E8909A",shoe:"#C07080",acc:"#F5C842",skin:"#FDBCB4"},
+    "Cobalt":      {top:"#0047AB",bottom:"#002060",shoe:"#001040",acc:"#F5C842",skin:"#FDBCB4"},
+  };
+  return m[color] || m["Monochrome"];
+}
+
+function buildAvatar(type, color) {
+  const c = getAvatarColors(color);
+  return type === 'Fem' ? `
+    <ellipse cx="90" cy="36" rx="21" ry="25" fill="${c.skin}"/>
+    <ellipse cx="90" cy="18" rx="21" ry="14" fill="#1a0a0a"/>
+    <rect x="83" y="57" width="14" height="14" fill="${c.skin}"/>
+    <path d="M58 70 Q70 62 83 66 L83 120 L58 120 Z" fill="${c.top}"/>
+    <path d="M122 70 Q110 62 97 66 L97 120 L122 120 Z" fill="${c.top}"/>
+    <path d="M83 66 Q90 74 97 66 L97 120 L83 120 Z" fill="${c.top}"/>
+    <ellipse cx="90" cy="120" rx="26" ry="6" fill="${c.top}" opacity="0.8"/>
+    <path d="M64 120 Q90 114 116 120 L120 200 L60 200 Z" fill="${c.bottom}"/>
+    <path d="M58 70 Q46 90 48 118 Q50 124 56 122 Q62 120 60 114 L62 86 L58 70" fill="${c.top}"/>
+    <path d="M122 70 Q134 90 132 118 Q130 124 124 122 Q118 120 120 114 L118 86 L122 70" fill="${c.top}"/>
+    <ellipse cx="49" cy="120" rx="6" ry="7" fill="${c.skin}"/>
+    <ellipse cx="131" cy="120" rx="6" ry="7" fill="${c.skin}"/>
+    <ellipse cx="76" cy="208" rx="12" ry="6" fill="${c.shoe}"/>
+    <ellipse cx="104" cy="208" rx="12" ry="6" fill="${c.shoe}"/>
+  ` : `
+    <ellipse cx="90" cy="38" rx="22" ry="26" fill="${c.skin}"/>
+    <ellipse cx="90" cy="20" rx="22" ry="14" fill="#1a0a0a"/>
+    <rect x="82" y="60" width="16" height="14" fill="${c.skin}"/>
+    <path d="M55 74 Q68 68 82 72 L82 130 L55 130 Z" fill="${c.top}"/>
+    <path d="M125 74 Q112 68 98 72 L98 130 L125 130 Z" fill="${c.top}"/>
+    <path d="M82 72 Q90 78 98 72 L98 130 L82 130 Z" fill="${c.top}"/>
+    <path d="M82 72 L86 80 L90 76 L94 80 L98 72" fill="${c.acc}" opacity="0.9"/>
+    <path d="M55 74 Q45 90 46 120 Q48 128 54 128 Q60 128 60 120 L62 90 L55 74" fill="${c.top}"/>
+    <path d="M125 74 Q135 90 134 120 Q132 128 126 128 Q120 128 120 120 L118 90 L125 74" fill="${c.top}"/>
+    <ellipse cx="50" cy="124" rx="7" ry="8" fill="${c.skin}"/>
+    <ellipse cx="130" cy="124" rx="7" ry="8" fill="${c.skin}"/>
+    <rect x="62" y="128" width="56" height="8" fill="${c.acc}" opacity="0.4" rx="2"/>
+    <rect x="62" y="134" width="24" height="100" fill="${c.bottom}" rx="3"/>
+    <rect x="94" y="134" width="24" height="100" fill="${c.bottom}" rx="3"/>
+    <ellipse cx="73" cy="236" rx="16" ry="8" fill="${c.shoe}"/>
+    <ellipse cx="107" cy="236" rx="16" ry="8" fill="${c.shoe}"/>
+  `;
+}
+
+/* ══════════════════════════════════════
+   TRY-ON / ROAST INPUTS
+══════════════════════════════════════ */
+function openTryOnPicker() {
+  document.getElementById('tryonInput').click();
+}
+
+function openRoastPicker() {
+  document.getElementById('roastInput').click();
+}
+
+function validateImageFile(file) {
+  if (!file) return 'No file selected.';
+  if (!file.type.startsWith('image/')) return 'Please upload an image file.';
+  if (file.size > 10 * 1024 * 1024) return 'Image must be under 10MB.';
+  return '';
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function setUploadStatus(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function readImageFile(file, onLoad) {
+  const reader = new FileReader();
+  reader.onload = e => onLoad(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function getActiveOutfit() {
+  if (lastOutfit) return lastOutfit;
+  const key = getOutfitKey();
+  const outfit = OUTFITS[key];
+  lastOutfit = outfit;
+  renderOutfit(outfit);
+  renderCarousel(key);
+  renderAccessories();
+  return outfit;
+}
+
+function getLookWash(color) {
+  const washes = {
+    "Monochrome": "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(13,13,13,0.18))",
+    "Navy": "linear-gradient(135deg, rgba(91,196,224,0.35), rgba(13,32,64,0.34))",
+    "Earth Tones": "linear-gradient(135deg, rgba(242,137,74,0.28), rgba(91,58,32,0.36))",
+    "Pastels": "linear-gradient(135deg, rgba(240,107,170,0.32), rgba(255,255,255,0.18))",
+    "Bold Colors": "linear-gradient(135deg, rgba(240,107,170,0.42), rgba(245,200,66,0.26))",
+    "Olive": "linear-gradient(135deg, rgba(245,200,66,0.24), rgba(58,74,16,0.35))",
+    "Blush": "linear-gradient(135deg, rgba(240,107,170,0.38), rgba(255,182,193,0.24))",
+    "Cobalt": "linear-gradient(135deg, rgba(91,196,224,0.3), rgba(0,71,171,0.42))",
+  };
+  return washes[color] || washes["Monochrome"];
+}
+
+function updateTryOnOverlay(outfit) {
+  const active = outfit || getActiveOutfit();
+  document.getElementById('tryonLookTitle').textContent = active.name.toUpperCase();
+  document.getElementById('tryonLookMeta').innerHTML = [
+    state.occasion,
+    state.vibe,
+    active.pieces[0].name,
+  ].map(item => `<span>${item}</span>`).join('');
+  document.getElementById('tryonLookWash').style.background = getLookWash(active.color);
+}
+
+function handleTryOnUpload(file) {
+  const error = validateImageFile(file);
+  if (error) {
+    showToast(error.toUpperCase());
+    return;
+  }
+  readImageFile(file, src => {
+    uploadedTryOn = { file, src };
+    setUploadStatus('tryonUploadStatus', `${file.name.toUpperCase()} · ${formatFileSize(file.size)}`);
+    document.getElementById('tryonBeforeImg').src = src;
+    document.getElementById('tryonAfterImg').src = src;
+    document.getElementById('tryonBeforeImg').classList.add('visible');
+    document.getElementById('tryonAfterImg').classList.add('visible');
+    document.querySelector('.before-avatar-display').classList.add('has-image');
+    document.querySelector('.after-avatar-display').classList.add('has-image');
+    updateTryOnOverlay(getActiveOutfit());
+    showToast('PHOTO READY FOR TRY-ON');
+  });
+}
+
+function handleRoastUpload(file) {
+  const error = validateImageFile(file);
+  if (error) {
+    showToast(error.toUpperCase());
+    return;
+  }
+  readImageFile(file, src => {
+    uploadedRoast = { file, src };
+    setUploadStatus('roastUploadStatus', `${file.name.toUpperCase()} · ${formatFileSize(file.size)}`);
+    document.getElementById('roastPreviewImg').src = src;
+    document.getElementById('roastPhotoSub').textContent = `${file.name} · ${formatFileSize(file.size)}`;
+    showToast('FIT PIC LOCKED IN');
+  });
+}
+
+/* ══════════════════════════════════════
+   TREND INTELLIGENCE
+══════════════════════════════════════ */
+function clamp(num, min, max) {
+  return Math.max(min, Math.min(max, num));
+}
+
+function getTrendSnapshot(outfit) {
+  const active = outfit || getActiveOutfit();
+  const base = Math.round(active.score * 10);
+  const vibeBoost = {
+    Minimal: 6,
+    Classic: 4,
+    Streetwear: 9,
+    Bold: 8,
+    Techwear: 10,
+    Casual: 5
+  }[state.vibe] || 5;
+  const seasonBoost = {
+    Spring: 4,
+    Summer: 6,
+    Autumn: 5,
+    Winter: 3
+  }[state.season] || 4;
+  const freshness = clamp(base + vibeBoost - 6, 62, 96);
+  const relevance = clamp(base + seasonBoost - 2, 64, 97);
+  const wearability = clamp(base + (state.vibe === 'Bold' ? -3 : 5), 60, 95);
+  const trendScore = clamp(Math.round((freshness + relevance + wearability) / 3), 60, 97);
+
+  const trendMap = {
+    Business: ['Soft tailoring', 'Quiet luxury layers', 'Sharp monochrome'],
+    Casual: ['Relaxed essentials', 'Clean sneaker rotation', 'Layered neutrals'],
+    "Evening Out": ['Texture contrast', 'Dark romance', 'Statement outerwear'],
+    "Date Night": ['Refined knitwear', 'Warm tonal dressing', 'Polished loafers'],
+    Weekend: ['Utility casual', 'Outdoor prep', 'Relaxed earth tones'],
+    Gym: ['Performance minimalism', 'Technical layering', 'Sport utility']
+  };
+
+  return {
+    trendScore,
+    relevance,
+    wearability,
+    freshness,
+    styles: trendMap[state.occasion] || ['Smart layering', 'Modern basics', 'Elevated staples'],
+    insights: [
+      {
+        title: 'What is landing',
+        copy: `${active.name} is strongest when you keep the ${state.vibe.toLowerCase()} direction crisp and let the ${active.color.toLowerCase()} palette do the heavy lifting.`
+      },
+      {
+        title: 'Next smart move',
+        copy: `Add one sharper accessory or texture switch to push this ${state.occasion.toLowerCase()} look from reliable to current.`
+      },
+      {
+        title: 'AI read',
+        copy: `${state.season} styling is rewarding balance right now: clean structure, wearable detail, and just enough personality to avoid looking over-rehearsed.`
+      }
+    ]
+  };
+}
+
+function renderTrendIntel(outfit) {
+  const trend = getTrendSnapshot(outfit);
+  document.getElementById('trendScoreValue').textContent = trend.trendScore;
+  document.getElementById('trendScoreCaption').textContent =
+    trend.trendScore >= 90 ? 'This look is hitting current style signals with almost no wasted motion.' :
+    trend.trendScore >= 80 ? 'Strong trend alignment with room for a bolder accent.' :
+    'Solid base. One sharper update would make it feel more current.';
+
+  [
+    ['trendRelevanceFill', 'trendRelevanceLabel', trend.relevance],
+    ['trendWearabilityFill', 'trendWearabilityLabel', trend.wearability],
+    ['trendFreshnessFill', 'trendFreshnessLabel', trend.freshness],
+  ].forEach(([fillId, labelId, value]) => {
+    document.getElementById(fillId).style.width = `${value}%`;
+    document.getElementById(labelId).textContent = `${value}%`;
+  });
+
+  document.getElementById('trendChipGrid').innerHTML = trend.styles
+    .map(style => `<div class="trend-chip">${style}</div>`)
+    .join('');
+
+  document.getElementById('trendInsightList').innerHTML = trend.insights
+    .map(item => `
+      <div class="trend-insight-item">
+        <div class="trend-insight-title">${item.title}</div>
+        <div class="trend-insight-copy">${item.copy}</div>
+      </div>
+    `).join('');
+}
+
+/* ══════════════════════════════════════
+   AI TRY-ON
+══════════════════════════════════════ */
+function triggerTryOn() {
+  if (!uploadedTryOn) {
+    openTryOnPicker();
+    showToast('UPLOAD A PHOTO TO START');
+    return;
+  }
+  if (tryonRunning) return;
+  tryonRunning = true;
+
+  const outfit = getActiveOutfit();
+  updateTryOnOverlay(outfit);
+
+  const preview = document.getElementById('tryonPreview');
+  const wrap = document.getElementById('beforeAfterWrap');
+  const sliderLine = document.getElementById('sliderLine');
+
+  wrap.classList.remove('active');
+  sliderLine.classList.remove('active');
+  preview.classList.add('scanning', 'has-preview');
+  const placeholder = preview.querySelector('.tryon-placeholder-text');
+  if (placeholder) placeholder.style.display = 'none';
+
+  document.getElementById('beforeAvatarSvg').innerHTML = buildAvatar(state.type, 'Monochrome');
+  document.getElementById('afterAvatarSvg').innerHTML = buildAvatar(state.type, outfit.color);
+
+  showToast('RUNNING AI TRY-ON');
+
+  setTimeout(() => {
+    preview.classList.remove('scanning');
+    wrap.classList.add('active');
+    sliderLine.classList.add('active');
+    tryonRunning = false;
+    initSlider();
+    showToast('DRAG TO COMPARE');
+  }, 1700);
+}
+
+function initSlider() {
+  const preview = document.getElementById('tryonPreview');
+  const afterPanel = document.getElementById('afterPanel');
+  const sliderLine = document.getElementById('sliderLine');
+  let dragging = false;
+
+  function setPos(x) {
+    const rect = preview.getBoundingClientRect();
+    const pct = Math.min(100, Math.max(0, ((x - rect.left) / rect.width) * 100));
+    afterPanel.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    sliderLine.style.left = `${pct}%`;
+  }
+
+  if (!tryonSliderBound) {
+    preview.addEventListener('mousedown', e => { dragging = true; setPos(e.clientX); });
+    window.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
+    window.addEventListener('mouseup', () => { dragging = false; });
+    preview.addEventListener('touchstart', e => { dragging = true; setPos(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener('touchend', () => { dragging = false; });
+    tryonSliderBound = true;
+  }
+
+  const rect = preview.getBoundingClientRect();
+  setPos(rect.left + rect.width / 2);
+}
+
+/* ══════════════════════════════════════
+   FASHION ROAST
+══════════════════════════════════════ */
+function buildRoastAnalysis() {
+  const outfit = getActiveOutfit();
+  const trend = getTrendSnapshot(outfit);
+  const seed = uploadedRoast ? (uploadedRoast.file.size % 11) - 5 : roastIdx - 1;
+  const color = clamp(Math.round(trend.relevance + seed), 42, 97);
+  const fit = clamp(Math.round(outfit.score * 10 + (state.vibe === 'Streetwear' ? -3 : 2) + seed), 40, 96);
+  const trendMetric = clamp(Math.round(trend.freshness + seed), 40, 97);
+  const occ = clamp(Math.round(trend.wearability + (state.occasion === 'Gym' ? -4 : 3)), 45, 97);
+  const score = clamp((((color * 0.24) + (fit * 0.3) + (trendMetric * 0.26) + (occ * 0.2)) / 10), 4.8, 9.8);
+
+  let vibe = 'SAFE BUT SOLID';
+  let verdict = `This look is competent, which is another way of saying it survived. ${outfit.name} has the bones, but right now it feels like you stopped one decision early.`;
+  if (score >= 8.8) {
+    vibe = 'ACTUALLY FIRE';
+    verdict = `I came in ready to be mean and now I have to be respectful, which is honestly rude of you. ${outfit.name} is landing because the silhouette is clean, the palette feels intentional, and the whole thing reads like you got dressed on purpose.`;
+  } else if (score >= 7.5) {
+    vibe = 'CLEAN WITH EDGE';
+    verdict = `There is real taste here. The outfit is coordinated, the vibe is clear, and the proportions mostly know each other. One stronger accessory or a slightly riskier shoe would take this from polished to memorable.`;
+  } else if (score >= 6.3) {
+    vibe = 'MID ENERGY';
+    verdict = `This isn't a disaster, but it is playing a little too nice. The structure works harder than the personality. You're close, which almost makes it meaner that the last 15 percent is still missing.`;
+  } else {
+    vibe = 'WE NEED TO TALK';
+    verdict = `The pieces are acting like they met in the hallway five minutes before this photo. There are good ingredients here, but the look needs a stronger throughline before it starts convincing anyone it was deliberate.`;
+  }
+
+  const tags = [
+    { label: score >= 8 ? 'Strong Silhouette' : 'Needs Sharper Shape', type: score >= 8 ? 'good' : 'bad' },
+    { label: trendMetric >= 82 ? 'Trend Aware' : 'Trend Lag', type: trendMetric >= 82 ? 'good' : 'neutral' },
+    { label: color >= 75 ? 'Color Harmony' : 'Palette Drift', type: color >= 75 ? 'good' : 'bad' },
+    { label: occ >= 78 ? 'Occasion Match' : 'Context Risk', type: occ >= 78 ? 'good' : 'neutral' },
+  ];
+
+  roastIdx++;
+
+  return {
+    score: score.toFixed(1),
+    vibe,
+    verdict,
+    tags,
+    metrics: { color, fit, trend: trendMetric, occ }
+  };
+}
+
+function triggerRoast() {
+  if (!uploadedRoast) {
+    openRoastPicker();
+    showToast('UPLOAD A FIT PIC FIRST');
+    return;
+  }
+  if (roasting) return;
+  roasting = true;
+
+  const idle = document.getElementById('roastIdle');
+  const result = document.getElementById('roastResult');
+  const zone = document.getElementById('roastUploadZone');
+  const data = buildRoastAnalysis();
+  const outfit = getActiveOutfit();
+
+  zone.style.transform = 'translate(-3px,-3px)';
+  setTimeout(() => { zone.style.transform = ''; }, 120);
+
+  showToast('AI IS JUDGING THE LOOK');
+
+  setTimeout(() => {
+    idle.style.display = 'none';
+    result.classList.add('show');
+    document.getElementById('roastPhotoRow').classList.add('show');
+    document.getElementById('roastPhotoTitle').textContent = outfit.name.toUpperCase();
+    document.getElementById('roastPhotoSub').textContent = `${uploadedRoast.file.name} · ${state.occasion} · ${state.vibe}`;
+
+    let scoreNum = 0;
+    const targetScore = parseFloat(data.score);
+    const scoreEl = document.getElementById('roastScore');
+    const scoreInterval = setInterval(() => {
+      scoreNum += 0.2;
+      if (scoreNum >= targetScore) {
+        scoreNum = targetScore;
+        clearInterval(scoreInterval);
+      }
+      scoreEl.textContent = `${scoreNum.toFixed(1)}/10`;
+    }, 30);
+
+    document.getElementById('roastVibePill').textContent = data.vibe;
+    typeWriter(document.getElementById('roastVerdict'), data.verdict, 14);
+    document.getElementById('roastTags').innerHTML = data.tags.map(t => {
+      const cls = t.type === 'good' ? 'good' : t.type === 'bad' ? 'bad' : 'neutral';
+      return `<span class="roast-tag-pill ${cls}">${t.label}</span>`;
+    }).join('');
+
+    setTimeout(() => {
+      setMeter('fillColor', 'mColor', data.metrics.color);
+      setMeter('fillFit', 'mFit', data.metrics.fit);
+      setMeter('fillTrend', 'mTrend', data.metrics.trend);
+      setMeter('fillOcc', 'mOcc', data.metrics.occ);
+    }, 400);
+
+    roasting = false;
+  }, 1300);
+}
+
+function setMeter(fillId, labelId, value) {
+  document.getElementById(fillId).style.width  = value + '%';
+  document.getElementById(labelId).textContent = value + '%';
+}
+
+function typeWriter(el, text, speed) {
+  el.textContent = '';
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.className = 'typed-cursor';
+  cursor.textContent = '|';
+  el.appendChild(cursor);
+
+  const interval = setInterval(() => {
+    el.insertBefore(document.createTextNode(text[i]), cursor);
+    i++;
+    if (i >= text.length) {
+      clearInterval(interval);
+      setTimeout(() => cursor.remove(), 800);
+    }
+  }, speed);
+}
+
+/* ══════════════════════════════════════
+   CAROUSEL
+══════════════════════════════════════ */
+function renderCarousel(currentKey) {
+  const carousel = document.getElementById('carousel');
+  const keys = Object.keys(OUTFITS);
+  const idx = keys.indexOf(currentKey);
+  const picks = [keys[idx], keys[(idx+2)%keys.length], keys[(idx+4)%keys.length]];
+
+  carousel.innerHTML = picks.map((key, i) => {
+    const o = OUTFITS[key];
+    const v = VARIATIONS[i];
+    const svg = buildAvatar(state.type, o.color);
+    const bgs = ['var(--blue)','var(--pink)','var(--yellow)'];
+    return `
+      <div class="combo-card ${i===0?'selected':''}" onclick="selectVariation(this,'${key}')">
+        <div class="combo-avatar" style="background:${bgs[i]};">
+          <svg viewBox="0 0 180 320" fill="none" xmlns="http://www.w3.org/2000/svg">${svg}</svg>
+          <div class="combo-var-tag">${v.tag}</div>
+        </div>
+        <div class="combo-info">
+          <div class="combo-name">${o.name.toUpperCase()}</div>
+          <div class="combo-desc">${v.desc}</div>
+          <div class="combo-tags">
+            ${o.pieces.slice(0,3).map(p=>`<span class="combo-tag">${p.name.split(' ').slice(0,2).join(' ')}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectVariation(el, key) {
+  document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const outfit = OUTFITS[key];
+  lastOutfit = outfit;
+  renderOutfit(outfit);
+  document.getElementById('outfitBody').style.display = 'block';
+  document.getElementById('outfitPlaceholder').style.display = 'none';
+  showToast('✦ VARIATION APPLIED');
+  document.querySelector('.generate-section').scrollIntoView({behavior:'smooth'});
+}
+
+/* ══════════════════════════════════════
+   ACCESSORIES
+══════════════════════════════════════ */
+function renderAccessories() {
+  document.getElementById('accGrid').innerHTML = ACCESSORIES_DATA.map(a => `
+    <div class="acc-card">
+      <div class="acc-top">${a.icon}</div>
+      <span class="acc-badge ${a.badgeClass}">${a.badge}</span>
+      <div class="acc-body">
+        <div class="acc-cat">${a.cat}</div>
+        <div class="acc-name">${a.name.toUpperCase()}</div>
+        <div class="acc-detail">${a.detail}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ══════════════════════════════════════
+   REVEAL ON SCROLL
+══════════════════════════════════════ */
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.08});
+document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => revealObs.observe(el));
+
+/* ══════════════════════════════════════
+   DRAG & DROP on upload zones
+══════════════════════════════════════ */
+['tryonDropzone','roastUploadZone'].forEach(id => {
+  const zone = document.getElementById(id);
+  if (!zone) return;
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',      e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (id === 'tryonDropzone') handleTryOnUpload(file);
+    else handleRoastUpload(file);
+  });
+});
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('tryonInput').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if (file) handleTryOnUpload(file);
+    e.target.value = '';
+  });
+  document.getElementById('roastInput').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if (file) handleRoastUpload(file);
+    e.target.value = '';
+  });
+
+  renderProductGrid();
+  renderCarousel(Object.keys(OUTFITS)[0]);
+  renderAccessories();
+  renderTrendIntel(OUTFITS[getOutfitKey()]);
+  updateTryOnOverlay(OUTFITS[getOutfitKey()]);
+
+  // Re-add cursor hover to dynamically created elements
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll('.combo-card, .acc-card, .product-card, .piece-row, .trend-chip').forEach(el => {
+      if (!el.dataset.cursorBound) {
+        el.dataset.cursorBound = '1';
+        el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+        el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+      }
+    });
+  });
+  observer.observe(document.body, {childList:true, subtree:true});
+});
+</script>
+</body>
+</html>
